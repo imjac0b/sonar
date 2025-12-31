@@ -118,7 +118,7 @@ export class TauriHlsLoader implements Loader<LoaderContext> {
         this.context,
         response
       );
-    // biome-ignore lint/suspicious/noExplicitAny: needed for tauri check
+      // biome-ignore lint/suspicious/noExplicitAny: needed for tauri check
     } catch (error: any) {
       if (this.stats.aborted) {
         return;

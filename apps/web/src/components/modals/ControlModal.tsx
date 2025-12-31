@@ -11,6 +11,7 @@ import {
   Settings,
   Trash2,
   Tv,
+  Video,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { MadeBy } from "@/components/made-by";
@@ -181,7 +182,7 @@ function WelcomeOption({
 function WelcomeView({
   onSelect,
 }: {
-  onSelect: (view: "add-m3u" | "add-xtream") => void;
+  onSelect: (view: "add-m3u" | "add-xtream" | "add-kick") => void;
 }) {
   return (
     <div className="grid gap-4 py-4">
@@ -196,6 +197,12 @@ function WelcomeView({
         icon={FileText}
         onClick={() => onSelect("add-m3u")}
         title="M3U Playlist"
+      />
+      <WelcomeOption
+        description="Watch a live stream from a Kick channel."
+        icon={Video}
+        onClick={() => onSelect("add-kick")}
+        title="Kick Stream"
       />
     </div>
   );
@@ -392,6 +399,100 @@ function AddXtreamView({
           {loading ? "Connecting..." : "Connect"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function AddKickView({
+  onBack,
+  onComplete,
+}: {
+  onBack: () => void;
+  onComplete: () => void;
+}) {
+  const addPlaylist = useStore((state) => state.addPlaylist);
+  const addChannelToPlaylist = useStore((state) => state.addChannelToPlaylist);
+  const playlists = useStore((state) => state.playlists);
+  const [channelName, setChannelName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    if (!channelName) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `https://kick.com/api/v2/channels/${channelName}/playback-url`
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch playback URL");
+      }
+
+      const data = await res.json();
+      if (!data.data) {
+        throw new Error("No playback URL found");
+      }
+
+      // Replace hostname as per requirements
+      const originalUrl = data.data;
+      const urlObj = new URL(originalUrl);
+      urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
+      const playbackUrl = urlObj.toString();
+
+      const channel: Channel = {
+        id: crypto.randomUUID(),
+        name: channelName,
+        url: playbackUrl,
+        group: "Kick",
+      };
+
+      const kickPlaylist = playlists.find((p) => p.type === "kick");
+
+      if (kickPlaylist) {
+        addChannelToPlaylist(kickPlaylist.id, channel);
+      } else {
+        addPlaylist({
+          id: crypto.randomUUID(),
+          name: "Kick",
+          type: "kick",
+          channels: [channel],
+        });
+      }
+      onComplete();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to add Kick stream. Make sure the channel is live.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="kick-channel">Channel Name</Label>
+        <div className="flex gap-2">
+          <Input
+            id="kick-channel"
+            onChange={(e) => setChannelName(e.target.value)}
+            placeholder="e.g. xqc"
+            value={channelName}
+          />
+          <Button disabled={loading} onClick={handleSubmit}>
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+      <Button onClick={onBack} variant="ghost">
+        Back
+      </Button>
     </div>
   );
 }
@@ -657,6 +758,8 @@ export function ControlModal() {
         return "Add M3U Playlist";
       case "add-xtream":
         return "Add Xtream Account";
+      case "add-kick":
+        return "Add Kick Stream";
       case "channel-selector":
         return "Select Channel";
       case "settings":
@@ -688,6 +791,12 @@ export function ControlModal() {
           )}
           {modalView === "add-xtream" && (
             <AddXtreamView
+              onBack={() => setModalView("welcome")}
+              onComplete={() => setModalView("channel-selector")}
+            />
+          )}
+          {modalView === "add-kick" && (
+            <AddKickView
               onBack={() => setModalView("welcome")}
               onComplete={() => setModalView("channel-selector")}
             />

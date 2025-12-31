@@ -19,7 +19,7 @@ export interface Channel {
 export interface Playlist {
   id: string;
   name: string;
-  type: "m3u" | "xtream";
+  type: "m3u" | "xtream" | "kick";
   channels: Channel[];
 }
 
@@ -42,6 +42,7 @@ interface UIState {
     | "welcome"
     | "add-m3u"
     | "add-xtream"
+    | "add-kick"
     | "channel-selector"
     | "settings";
 }
@@ -55,6 +56,7 @@ interface AppState {
 
   // Actions
   addPlaylist: (playlist: Playlist) => void;
+  addChannelToPlaylist: (playlistId: string, channel: Channel) => void;
   renamePlaylist: (id: string, name: string) => void;
   removePlaylist: (id: string) => void;
   addStream: (channel: Channel) => void;
@@ -105,6 +107,15 @@ export const useStore = create<AppState>()(
 
       addPlaylist: (playlist) =>
         set((state) => ({ playlists: [...state.playlists, playlist] })),
+
+      addChannelToPlaylist: (playlistId, channel) =>
+        set((state) => ({
+          playlists: state.playlists.map((p) =>
+            p.id === playlistId
+              ? { ...p, channels: [...p.channels, channel] }
+              : p
+          ),
+        })),
 
       renamePlaylist: (id, name) =>
         set((state) => ({

@@ -26,8 +26,6 @@ export function StreamPlayer({
   // Otherwise use manual mute state
   const isMuted = focusMode ? !isSelected : manualMute;
 
-  console.log("isTauri", isTauri());
-
   return (
     <div className="relative h-full w-full">
       <button
@@ -57,9 +55,11 @@ export function StreamPlayer({
 
         <ReactPlayer
           config={{
-            hls: {
-              loader: TauriHlsLoader,
-            },
+            hls: isTauri()
+              ? {
+                  loader: TauriHlsLoader,
+                }
+              : {},
           }}
           controls={false}
           height="100%"
