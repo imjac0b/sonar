@@ -5,16 +5,20 @@ import {
   Edit2,
   FileText,
   Folder,
+  Laptop,
+  Moon,
   Play,
   Plus,
   Search,
   Settings,
+  Sun,
   Trash2,
   Tv,
   Video,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { MadeBy } from "@/components/made-by";
+import { useTheme } from "@/components/theme-provider";
 import {
   Credenza,
   CredenzaBody,
@@ -493,6 +497,7 @@ function AddKickView({
 
 function SettingsView({ onBack }: { onBack: () => void }) {
   const { settings, toggleSetting } = useStore();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="grid gap-4 py-4">
@@ -510,6 +515,59 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           type="checkbox"
         />
       </label>
+
+      <div className="flex items-center justify-between">
+        <span className="flex flex-col space-y-1">
+          <span className="font-medium text-sm leading-none">Theme</span>
+          <span className="font-normal text-muted-foreground text-xs">
+            Select the interface theme
+          </span>
+        </span>
+        <div className="flex items-center gap-1 rounded-lg border p-1">
+          <button
+            className={cn(
+              "rounded-md p-1.5 transition-colors",
+              theme === "light"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            onClick={() => setTheme("light")}
+            title="Light"
+            type="button"
+          >
+            <Sun className="h-4 w-4" />
+            <span className="sr-only">Light</span>
+          </button>
+          <button
+            className={cn(
+              "rounded-md p-1.5 transition-colors",
+              theme === "dark"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            onClick={() => setTheme("dark")}
+            title="Dark"
+            type="button"
+          >
+            <Moon className="h-4 w-4" />
+            <span className="sr-only">Dark</span>
+          </button>
+          <button
+            className={cn(
+              "rounded-md p-1.5 transition-colors",
+              theme === "system"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            onClick={() => setTheme("system")}
+            title="System"
+            type="button"
+          >
+            <Laptop className="h-4 w-4" />
+            <span className="sr-only">System</span>
+          </button>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between border-t pt-4">
         <Button onClick={onBack} variant="ghost">

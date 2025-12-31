@@ -9,8 +9,8 @@ export function PlayerGrid() {
 
   if (count === 0) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-background">
-        <h1 className="font-bold text-6xl">Sonar</h1>
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-6">
+        <h1 className="font-bold text-6xl text-primary">Sonar</h1>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-8">
             <span className="text-muted-foreground">Add stream</span>

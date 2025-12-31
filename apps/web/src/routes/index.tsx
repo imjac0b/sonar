@@ -110,10 +110,10 @@ function HomeComponent() {
   }, []);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-black text-white">
+    <>
       <PlayerGrid />
       <ControlModal />
       <BrowserSupportModal />
-    </div>
+    </>
   );
 }
