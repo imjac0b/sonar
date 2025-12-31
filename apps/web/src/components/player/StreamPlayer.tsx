@@ -54,6 +54,7 @@ export function StreamPlayer({
         )}
 
         <ReactPlayer
+          autoPlay={true}
           config={{
             hls: isTauri()
               ? {
