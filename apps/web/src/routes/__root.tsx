@@ -1,13 +1,17 @@
-import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-import Header from "@/components/header";
+import { Toaster } from "@/components/shadcn/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
 
 import "../index.css";
 
-export interface RouterAppContext {}
+// biome-ignore lint/style/useConsistentTypeDefinitions: we need to use an empty object for the context
+// biome-ignore lint/complexity/noBannedTypes: we need to use an empty object for the context
+export type RouterAppContext = {};
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
@@ -40,10 +44,7 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
-        </div>
+        <Outlet />
         <Toaster richColors />
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
