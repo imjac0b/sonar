@@ -64,7 +64,15 @@ function handleGlobalKeys(e: KeyboardEvent) {
   const { selectedStreamId, removeStream, setModalOpen, setModalView } = state;
 
   if (e.key === "+" || e.key === "=") {
+    e.preventDefault();
     setModalView("channel-selector");
+    setModalOpen(true);
+    return;
+  }
+
+  if (e.key === ",") {
+    e.preventDefault();
+    setModalView("settings");
     setModalOpen(true);
     return;
   }

@@ -24,9 +24,18 @@ export interface Stream {
   status: "playing" | "error" | "buffering";
 }
 
+interface Settings {
+  focusMode: boolean; // Mute others when selected
+}
+
 interface UIState {
   isModalOpen: boolean;
-  modalView: "welcome" | "add-m3u" | "add-xtream" | "channel-selector";
+  modalView:
+    | "welcome"
+    | "add-m3u"
+    | "add-xtream"
+    | "channel-selector"
+    | "settings";
 }
 
 interface AppState {
@@ -34,6 +43,7 @@ interface AppState {
   streams: Stream[];
   selectedStreamId: string | null;
   ui: UIState;
+  settings: Settings;
 
   // Actions
   addPlaylist: (playlist: Playlist) => void;
@@ -43,6 +53,7 @@ interface AppState {
   selectStream: (id: string | null) => void;
   setModalOpen: (isOpen: boolean) => void;
   setModalView: (view: UIState["modalView"]) => void;
+  toggleSetting: (key: keyof Settings) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -51,8 +62,11 @@ export const useStore = create<AppState>()(
       playlists: [],
       streams: [],
       selectedStreamId: null,
+      settings: {
+        focusMode: false,
+      },
       ui: {
-        isModalOpen: true, // Initially true, but updated on hydration
+        isModalOpen: true,
         modalView: "welcome",
       },
 
@@ -75,15 +89,14 @@ export const useStore = create<AppState>()(
           };
           return {
             streams: [...state.streams, newStream],
-            selectedStreamId: newStream.id, // Auto-select new stream
-            ui: { ...state.ui, isModalOpen: false }, // Close modal on selection
+            selectedStreamId: newStream.id,
+            ui: { ...state.ui, isModalOpen: false },
           };
         }),
 
       removeStream: (id) =>
         set((state) => {
           const newStreams = state.streams.filter((s) => s.id !== id);
-          // Select adjacent stream if removed one was selected
           let newSelectedId = state.selectedStreamId;
           if (state.selectedStreamId === id) {
             newSelectedId =
@@ -102,6 +115,11 @@ export const useStore = create<AppState>()(
 
       setModalView: (view) =>
         set((state) => ({ ui: { ...state.ui, modalView: view } })),
+
+      toggleSetting: (key) =>
+        set((state) => ({
+          settings: { ...state.settings, [key]: !state.settings[key] },
+        })),
     }),
     {
       name: "sonar-storage",
@@ -109,6 +127,7 @@ export const useStore = create<AppState>()(
         playlists: state.playlists,
         streams: state.streams,
         selectedStreamId: state.selectedStreamId,
+        settings: state.settings,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && state.streams.length > 0) {

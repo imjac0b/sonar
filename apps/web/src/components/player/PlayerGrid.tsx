@@ -19,7 +19,7 @@ export function PlayerGrid() {
 
   return (
     <div
-      className="grid h-screen w-full gap-1 bg-black p-1"
+      className="grid h-screen w-full bg-black"
       style={{
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,

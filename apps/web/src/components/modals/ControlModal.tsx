@@ -5,6 +5,7 @@ import {
   Play,
   Plus,
   Search,
+  Settings,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -69,17 +70,21 @@ function Input({
 
 function Label({
   className,
+  htmlFor,
+  children,
   ...props
 }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     <label
       className={cn(
         "font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className
       )}
+      htmlFor={htmlFor}
       {...props}
-    />
+    >
+      {children}
+    </label>
   );
 }
 
@@ -301,6 +306,35 @@ function AddXtreamView({
   );
 }
 
+function SettingsView({ onBack }: { onBack: () => void }) {
+  const { settings, toggleSetting } = useStore();
+
+  return (
+    <div className="grid gap-4 py-4">
+      <label className="flex cursor-pointer items-center justify-between space-x-2">
+        <span className="flex flex-col space-y-1">
+          <span className="font-medium text-sm leading-none">Focus Mode</span>
+          <span className="font-normal text-muted-foreground text-xs">
+            Only play audio from the selected stream
+          </span>
+        </span>
+        <input
+          checked={settings.focusMode}
+          className="h-4 w-4"
+          onChange={() => toggleSetting("focusMode")}
+          type="checkbox"
+        />
+      </label>
+
+      <div className="flex justify-between border-t pt-4">
+        <Button onClick={onBack} variant="ghost">
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ChannelSelectorView() {
   const { playlists, addStream } = useStore();
   const setModalView = useStore((state) => state.setModalView);
@@ -347,6 +381,9 @@ function ChannelSelectorView() {
           autoFocus
           className="pl-8"
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
           placeholder="Search channels..."
           value={search}
         />
@@ -397,6 +434,13 @@ function ChannelSelectorView() {
         >
           <Plus className="mr-2 h-4 w-4" /> Add Another Playlist
         </Button>
+        <Button
+          onClick={() => setModalView("settings")}
+          size="sm"
+          variant="ghost"
+        >
+          <Settings className="mr-2 h-4 w-4" /> Settings
+        </Button>
       </div>
     </div>
   );
@@ -423,6 +467,8 @@ export function ControlModal() {
         return "Add Xtream Account";
       case "channel-selector":
         return "Select Channel";
+      case "settings":
+        return "Settings";
       default:
         return "Sonar";
     }
@@ -453,6 +499,9 @@ export function ControlModal() {
               onBack={() => setModalView("welcome")}
               onComplete={() => setModalView("channel-selector")}
             />
+          )}
+          {modalView === "settings" && (
+            <SettingsView onBack={() => setModalView("channel-selector")} />
           )}
           {modalView === "channel-selector" && <ChannelSelectorView />}
         </CredenzaBody>
