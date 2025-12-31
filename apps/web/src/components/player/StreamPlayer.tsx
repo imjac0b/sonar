@@ -1,10 +1,11 @@
 import { isTauri } from "@tauri-apps/api/core";
+import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
-import ReactPlayer from "react-player";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
 import { cn } from "@/lib/utils";
 import { type Stream, useStore } from "@/store/useStore";
+import "@vidstack/react/player/styles/base.css";
 
 interface StreamPlayerProps {
   stream: Stream;
@@ -112,31 +113,29 @@ export function StreamPlayer({
           </div>
         )}
 
-        <ReactPlayer
-          autoPlay={true}
-          config={{
-            hls: isTauri()
-              ? {
-                  loader: TauriHlsLoader,
-                }
-              : {},
-          }}
+        <MediaPlayer
+          autoplay
+          className="h-full w-full"
           controls={false}
-          height="100%"
           muted={isMuted}
+          onCanPlay={() => setIsLoading(false)}
           onError={(e) => {
-            // If it was a kick stream and failed, maybe we should retry fetching the URL?
-            // For now just show error.
             setIsLoading(false);
             setError("Failed to load stream");
             console.error("Stream Error:", e);
           }}
-          onReady={() => setIsLoading(false)}
-          onStart={() => setIsLoading(false)}
-          playing
-          src={resolvedUrl ?? undefined}
-          width="100%"
-        />
+          onPlay={() => setIsLoading(false)}
+          onProviderSetup={(provider) => {
+            if (isTauri() && provider.type === "hls") {
+              provider.config = {
+                loader: TauriHlsLoader,
+              };
+            }
+          }}
+          src={resolvedUrl ?? ""}
+        >
+          <MediaProvider className="h-full w-full object-cover" />
+        </MediaPlayer>
 
         {/* Title Overlay */}
         <div
