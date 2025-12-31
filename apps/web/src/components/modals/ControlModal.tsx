@@ -420,7 +420,7 @@ function ChannelSelectorView() {
           <div className="mb-2" key={playlist.id}>
             <div className="group flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
               <button
-                className="flex min-w-0 flex-1 items-center gap-2 text-left font-semibold"
+                className="grid min-w-0 flex-1 grid-cols-[auto_auto_1fr_auto] items-center gap-2 text-left font-semibold"
                 onClick={() => toggleExpand(playlist.id)}
                 type="button"
               >
@@ -449,16 +449,14 @@ function ChannelSelectorView() {
               <div className="mt-1 ml-6 space-y-1">
                 {playlist.channels.map((channel) => (
                   <button
-                    className="flex w-full min-w-0 items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                    className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
                     key={channel.id}
                     onClick={() => addStream(channel)}
                     type="button"
                   >
                     <ChannelIcon logo={channel.logo} name={channel.name} />
-                    <span className="min-w-0 flex-1 truncate">
-                      {channel.name}
-                    </span>
-                    <Play className="h-3 w-3 shrink-0 opacity-50" />
+                    <span className="truncate">{channel.name}</span>
+                    <Play className="h-3 w-3 opacity-50" />
                   </button>
                 ))}
               </div>

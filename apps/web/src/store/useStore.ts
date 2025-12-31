@@ -130,7 +130,7 @@ export const useStore = create<AppState>()(
         settings: state.settings,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state && state.streams.length > 0) {
+        if (state && (state.streams.length > 0 || state.playlists.length > 0)) {
           state.setModalOpen(false);
         }
       },
