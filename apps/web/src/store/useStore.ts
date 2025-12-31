@@ -21,6 +21,7 @@ export interface Stream {
   channelId: string;
   url: string;
   title: string;
+  logo?: string;
   status: "playing" | "error" | "buffering";
 }
 
@@ -47,6 +48,7 @@ interface AppState {
 
   // Actions
   addPlaylist: (playlist: Playlist) => void;
+  renamePlaylist: (id: string, name: string) => void;
   removePlaylist: (id: string) => void;
   addStream: (channel: Channel) => void;
   removeStream: (id: string) => void;
@@ -73,6 +75,13 @@ export const useStore = create<AppState>()(
       addPlaylist: (playlist) =>
         set((state) => ({ playlists: [...state.playlists, playlist] })),
 
+      renamePlaylist: (id, name) =>
+        set((state) => ({
+          playlists: state.playlists.map((p) =>
+            p.id === id ? { ...p, name } : p
+          ),
+        })),
+
       removePlaylist: (id) =>
         set((state) => ({
           playlists: state.playlists.filter((p) => p.id !== id),
@@ -85,6 +94,7 @@ export const useStore = create<AppState>()(
             channelId: channel.id,
             url: channel.url,
             title: channel.name,
+            logo: channel.logo,
             status: "playing",
           };
           return {

@@ -70,10 +70,19 @@ export function StreamPlayer({
         {/* Title Overlay */}
         <div
           className={cn(
-            "absolute top-0 left-0 bg-black/60 p-2 font-medium text-white text-xs transition-opacity duration-200",
+            "absolute top-0 left-0 flex items-center gap-2 bg-black/60 p-2 font-medium text-white text-xs transition-opacity duration-200",
             isSelected ? "opacity-100" : "opacity-0 hover:opacity-100"
           )}
         >
+          {stream.logo && (
+            <img
+              alt={stream.title}
+              className="h-4 w-4 object-contain"
+              height={16}
+              src={stream.logo}
+              width={16}
+            />
+          )}
           {stream.title}
         </div>
       </button>

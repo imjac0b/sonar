@@ -2,6 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   ChevronDown,
   ChevronRight,
+  Edit2,
   FileText,
   Folder,
   Play,
@@ -224,7 +225,7 @@ function AddM3UView({
       const channels = parseM3U(text);
       addPlaylist({
         id: crypto.randomUUID(),
-        name: file.name.replace(".m3u", "").replace(".m3u8", ""),
+        name: file.name.replace(".m3u8", "").replace(".m3u", ""),
         type: "m3u",
         channels,
       });
@@ -447,12 +448,16 @@ function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
 }
 
 function ChannelSelectorView() {
-  const { playlists, addStream, removePlaylist } = useStore();
+  const { playlists, addStream, removePlaylist, renamePlaylist } = useStore();
   const setModalView = useStore((state) => state.setModalView);
   const [expandedPlaylists, setExpandedPlaylists] = useState<
     Record<string, boolean>
   >({});
   const [search, setSearch] = useState("");
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(
+    null
+  );
+  const [editName, setEditName] = useState("");
   const parentRef = useRef<HTMLDivElement>(null);
 
   const toggleExpand = (id: string) => {
@@ -542,10 +547,45 @@ function ChannelSelectorView() {
                           <ChevronRight className="h-4 w-4 shrink-0" />
                         )}
                         <Folder className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{item.data.name}</span>
+                        {editingPlaylistId === item.data.id ? (
+                          <input
+                            autoFocus
+                            className="h-6 min-w-0 flex-1 rounded-sm bg-transparent px-1 font-semibold outline-none ring-1 ring-ring"
+                            onBlur={() => {
+                              renamePlaylist(item.data.id, editName);
+                              setEditingPlaylistId(null);
+                            }}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === "Enter") {
+                                renamePlaylist(item.data.id, editName);
+                                setEditingPlaylistId(null);
+                              } else if (e.key === "Escape") {
+                                setEditingPlaylistId(null);
+                              }
+                            }}
+                            value={editName}
+                          />
+                        ) : (
+                          <span className="truncate">{item.data.name}</span>
+                        )}
                         <span className="shrink-0 text-muted-foreground text-xs">
                           {item.data.channels.length} channels
                         </span>
+                      </button>
+                      <button
+                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingPlaylistId(item.data.id);
+                          setEditName(item.data.name);
+                        }}
+                        title="Rename playlist"
+                        type="button"
+                      >
+                        <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
