@@ -43,5 +43,28 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ matrix.args }}
-          uploadWorkflowArtifacts: true
+          includeUpdaterJson: false
           projectPath: './apps/web'
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.platform == 'ubuntu-22.04'
+        with:
+          name: binaries-linux
+          path: |
+            ${{ github.workspace }}/apps/web/src-tauri/target/release/bundle/**/*.deb
+            ${{ github.workspace }}/apps/web/src-tauri/target/release/bundle/**/*.rpm
+            ${{ github.workspace }}/apps/web/src-tauri/target/release/bundle/**/*.AppImage
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.platform == 'macos-latest'
+        with:
+          name: binaries-macos
+          path: |
+            ${{ github.workspace }}/apps/web/src-tauri/target/universal-apple-darwin/release/bundle/**/*.dmg
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.platform == 'windows-latest'
+        with:
+          name: binaries-windows
+          path: |
+            ${{ github.workspace }}/apps/web/src-tauri/target/release/bundle/**/*.exe
