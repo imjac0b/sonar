@@ -1,5 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { MediaPlayer, MediaProvider } from "@vidstack/react";
+import { isHLSProvider, MediaPlayer, MediaProvider } from "@vidstack/react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
@@ -125,8 +125,8 @@ export function StreamPlayer({
             console.error("Stream Error:", e);
           }}
           onPlay={() => setIsLoading(false)}
-          onProviderSetup={(provider) => {
-            if (isTauri() && provider.type === "hls") {
+          onProviderChange={(provider) => {
+            if (isTauri() && isHLSProvider(provider)) {
               provider.config = {
                 loader: TauriHlsLoader,
               };
