@@ -22,6 +22,7 @@ export function StreamPlayer({
   const [manualMute, setManualMute] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const focusMode = useStore((state) => state.settings.focusMode);
+  const isAudioEnabled = useStore((state) => state.isAudioEnabled);
 
   // Effect to resolve URL if needed (e.g. Kick streams)
   useEffect(() => {
@@ -82,7 +83,7 @@ export function StreamPlayer({
 
   // In focus mode, mute all streams except selected
   // Otherwise use manual mute state
-  const isMuted = focusMode ? !isSelected : manualMute;
+  const isMuted = !isAudioEnabled || (focusMode ? !isSelected : manualMute);
 
   return (
     <div className="relative h-full w-full">

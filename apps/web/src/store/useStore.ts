@@ -53,8 +53,10 @@ interface AppState {
   selectedStreamId: string | null;
   ui: UIState;
   settings: Settings;
+  isAudioEnabled: boolean;
 
   // Actions
+  setAudioEnabled: (enabled: boolean) => void;
   addPlaylist: (playlist: Playlist) => void;
   addChannelToPlaylist: (playlistId: string, channel: Channel) => void;
   removeChannelFromPlaylist: (playlistId: string, channelId: string) => void;
@@ -98,6 +100,7 @@ export const useStore = create<AppState>()(
       playlists: [],
       streams: [],
       selectedStreamId: null,
+      isAudioEnabled: isTauri(),
       settings: {
         focusMode: false,
       },
@@ -105,6 +108,8 @@ export const useStore = create<AppState>()(
         isModalOpen: true,
         modalView: "welcome",
       },
+
+      setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
 
       addPlaylist: (playlist) =>
         set((state) => ({ playlists: [...state.playlists, playlist] })),

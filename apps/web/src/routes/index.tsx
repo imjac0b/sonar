@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { BrowserSupportModal } from "@/components/modals/BrowserSupportModal";
 import { ControlModal } from "@/components/modals/ControlModal";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { useStore } from "@/store/useStore";
@@ -112,6 +113,7 @@ function HomeComponent() {
     <div className="h-screen w-screen overflow-hidden bg-black text-white">
       <PlayerGrid />
       <ControlModal />
+      <BrowserSupportModal />
     </div>
   );
 }
