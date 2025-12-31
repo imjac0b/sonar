@@ -1,5 +1,12 @@
+import { isTauri } from "@tauri-apps/api/core";
+import { LazyStore } from "@tauri-apps/plugin-store";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import {
+  createJSONStorage,
+  type PersistStorage,
+  persist,
+  type StorageValue,
+} from "zustand/middleware";
 
 export interface Channel {
   id: string;
@@ -57,6 +64,30 @@ interface AppState {
   setModalView: (view: UIState["modalView"]) => void;
   toggleSetting: (key: keyof Settings) => void;
 }
+
+type PersistedState = Pick<
+  AppState,
+  "playlists" | "streams" | "selectedStreamId" | "settings"
+>;
+
+const getTauriStore = () => new LazyStore("store.json");
+
+const tauriStorage: PersistStorage<PersistedState> = {
+  getItem: async (name) => {
+    const store = getTauriStore();
+    return (await store.get<StorageValue<PersistedState>>(name)) || null;
+  },
+  setItem: async (name, value) => {
+    const store = getTauriStore();
+    await store.set(name, value);
+    await store.save();
+  },
+  removeItem: async (name) => {
+    const store = getTauriStore();
+    await store.delete(name);
+    await store.save();
+  },
+};
 
 export const useStore = create<AppState>()(
   persist(
@@ -133,6 +164,9 @@ export const useStore = create<AppState>()(
     }),
     {
       name: "sonar-storage",
+      storage: isTauri()
+        ? tauriStorage
+        : createJSONStorage<PersistedState>(() => localStorage),
       partialize: (state) => ({
         playlists: state.playlists,
         streams: state.streams,
