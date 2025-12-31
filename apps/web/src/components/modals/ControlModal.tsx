@@ -350,6 +350,7 @@ function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
       alt={name}
       className="h-4 w-4 shrink-0 rounded-sm object-contain"
       height={16}
+      loading="lazy"
       onError={() => setError(true)}
       src={logo}
       width={16}
