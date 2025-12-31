@@ -1,6 +1,8 @@
+import { isTauri } from "@tauri-apps/api/core";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import ReactPlayer from "react-player";
+import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
 import { cn } from "@/lib/utils";
 import { type Stream, useStore } from "@/store/useStore";
 
@@ -23,6 +25,8 @@ export function StreamPlayer({
   // In focus mode, mute all streams except selected
   // Otherwise use manual mute state
   const isMuted = focusMode ? !isSelected : manualMute;
+
+  console.log("isTauri", isTauri());
 
   return (
     <div className="relative h-full w-full">
@@ -52,6 +56,11 @@ export function StreamPlayer({
         )}
 
         <ReactPlayer
+          config={{
+            hls: {
+              loader: TauriHlsLoader,
+            },
+          }}
           controls={false}
           height="100%"
           muted={isMuted}
