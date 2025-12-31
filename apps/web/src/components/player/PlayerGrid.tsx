@@ -36,7 +36,7 @@ export function PlayerGrid() {
 
   return (
     <div
-      className="grid h-screen w-full bg-black"
+      className="grid h-screen w-full gap-1 bg-background"
       style={{
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,

@@ -89,7 +89,7 @@ export function StreamPlayer({
     <div className="relative h-full w-full">
       <button
         className={cn(
-          "relative block h-full w-full overflow-hidden border-4 bg-black p-0 outline-none transition-colors duration-200",
+          "relative block h-full w-full overflow-hidden rounded-lg border-2 bg-black p-0 outline-none transition-colors duration-200",
           isSelected ? "border-primary" : "border-transparent"
         )}
         onClick={onSelect}
