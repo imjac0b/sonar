@@ -6,6 +6,8 @@ import {
   Plus,
   Search,
   Settings,
+  Trash2,
+  Tv,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -335,8 +337,28 @@ function SettingsView({ onBack }: { onBack: () => void }) {
   );
 }
 
+function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
+  const [error, setError] = useState(false);
+
+  if (!logo || error) {
+    return <Tv className="h-4 w-4 shrink-0 text-muted-foreground" />;
+  }
+
+  return (
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: onError is for image loading failures
+    <img
+      alt={name}
+      className="h-4 w-4 shrink-0 rounded-sm object-contain"
+      height={16}
+      onError={() => setError(true)}
+      src={logo}
+      width={16}
+    />
+  );
+}
+
 function ChannelSelectorView() {
-  const { playlists, addStream } = useStore();
+  const { playlists, addStream, removePlaylist } = useStore();
   const setModalView = useStore((state) => state.setModalView);
   const [expandedPlaylists, setExpandedPlaylists] = useState<
     Record<string, boolean>
@@ -345,6 +367,11 @@ function ChannelSelectorView() {
 
   const toggleExpand = (id: string) => {
     setExpandedPlaylists((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleDeletePlaylist = (e: React.MouseEvent, playlistId: string) => {
+    e.stopPropagation();
+    removePlaylist(playlistId);
   };
 
   const filteredPlaylists = useMemo(() => {
@@ -391,34 +418,47 @@ function ChannelSelectorView() {
       <div className="flex-1 overflow-auto rounded-md border p-2">
         {filteredPlaylists.map((playlist) => (
           <div className="mb-2" key={playlist.id}>
-            <button
-              className="flex w-full items-center gap-2 rounded-md p-2 text-left font-semibold hover:bg-accent"
-              onClick={() => toggleExpand(playlist.id)}
-              type="button"
-            >
-              {expandedPlaylists[playlist.id] || search ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              <Folder className="mr-2 h-4 w-4" />
-              {playlist.name}
-              <span className="ml-auto text-muted-foreground text-xs">
-                {playlist.channels.length} channels
-              </span>
-            </button>
+            <div className="group flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
+              <button
+                className="flex min-w-0 flex-1 items-center gap-2 text-left font-semibold"
+                onClick={() => toggleExpand(playlist.id)}
+                type="button"
+              >
+                {expandedPlaylists[playlist.id] || search ? (
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                )}
+                <Folder className="h-4 w-4 shrink-0" />
+                <span className="truncate">{playlist.name}</span>
+                <span className="shrink-0 text-muted-foreground text-xs">
+                  {playlist.channels.length} channels
+                </span>
+              </button>
+              <button
+                className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                onClick={(e) => handleDeletePlaylist(e, playlist.id)}
+                title="Delete playlist"
+                type="button"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
 
             {(expandedPlaylists[playlist.id] || search) && (
               <div className="mt-1 ml-6 space-y-1">
                 {playlist.channels.map((channel) => (
                   <button
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                    className="flex w-full min-w-0 items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
                     key={channel.id}
                     onClick={() => addStream(channel)}
                     type="button"
                   >
-                    <Play className="h-3 w-3" />
-                    <span className="truncate">{channel.name}</span>
+                    <ChannelIcon logo={channel.logo} name={channel.name} />
+                    <span className="min-w-0 flex-1 truncate">
+                      {channel.name}
+                    </span>
+                    <Play className="h-3 w-3 shrink-0 opacity-50" />
                   </button>
                 ))}
               </div>
