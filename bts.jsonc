@@ -14,6 +14,7 @@
   ],
   "addons": [
     "biome",
+    "tauri",
     "turborepo",
     "ultracite"
   ],
