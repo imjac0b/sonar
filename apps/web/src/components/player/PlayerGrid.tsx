@@ -1,3 +1,4 @@
+import { MadeBy } from "@/components/made-by";
 import { Kbd } from "@/components/shadcn/kbd";
 import { useStore } from "@/store/useStore";
 import { StreamPlayer } from "./StreamPlayer";
@@ -24,6 +25,7 @@ export function PlayerGrid() {
             <Kbd>Del</Kbd>
           </div>
         </div>
+        <MadeBy />
       </div>
     );
   }

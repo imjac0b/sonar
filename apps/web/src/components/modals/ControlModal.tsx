@@ -12,6 +12,7 @@ import {
   Tv,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { MadeBy } from "@/components/made-by";
 import {
   Credenza,
   CredenzaBody,
@@ -414,10 +415,11 @@ function SettingsView({ onBack }: { onBack: () => void }) {
         />
       </label>
 
-      <div className="flex justify-between border-t pt-4">
+      <div className="flex items-center justify-between border-t pt-4">
         <Button onClick={onBack} variant="ghost">
           Back
         </Button>
+        <MadeBy />
       </div>
     </div>
   );
