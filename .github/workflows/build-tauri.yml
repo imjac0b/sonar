@@ -32,6 +32,15 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: Restore Cargo cache
+        uses: actions/cache/restore@v4
+        id: cargo-cache-restore
+        with:
+          path: |
+            ~/.cargo/
+            apps/web/src-tauri/target/
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -75,3 +84,13 @@ jobs:
           name: binaries-windows
           path: |
             ${{ github.workspace }}/apps/web/src-tauri/target/release/bundle/**/*.exe
+
+      - name: Create cargo cache
+        uses: actions/cache/save@v4
+        id: cargo-cache-save
+        if: steps.cargo-cache-restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.cargo/
+            apps/web/src-tauri/target/
+          key: ${{ steps.cargo-cache-restore.outputs.cache-primary-key }}
