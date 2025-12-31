@@ -30,7 +30,7 @@ import { type Channel, type Playlist, useStore } from "@/store/useStore";
 
 type FlatItem =
   | { type: "header"; data: Playlist }
-  | { type: "channel"; data: Channel };
+  | { type: "channel"; data: Channel; playlistId: string };
 
 function flattenItemsWithSearch(
   playlists: Playlist[],
@@ -46,7 +46,7 @@ function flattenItemsWithSearch(
     if (filteredChannels.length > 0) {
       items.push({ type: "header", data: playlist });
       for (const channel of filteredChannels) {
-        items.push({ type: "channel", data: channel });
+        items.push({ type: "channel", data: channel, playlistId: playlist.id });
       }
     }
   }
@@ -62,7 +62,7 @@ function flattenItemsDefault(
     items.push({ type: "header", data: playlist });
     if (expandedPlaylists[playlist.id]) {
       for (const channel of playlist.channels) {
-        items.push({ type: "channel", data: channel });
+        items.push({ type: "channel", data: channel, playlistId: playlist.id });
       }
     }
   }
@@ -437,16 +437,10 @@ function AddKickView({
         throw new Error("No playback URL found");
       }
 
-      // Replace hostname as per requirements
-      const originalUrl = data.data;
-      const urlObj = new URL(originalUrl);
-      urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
-      const playbackUrl = urlObj.toString();
-
       const channel: Channel = {
         id: crypto.randomUUID(),
         name: channelName,
-        url: playbackUrl,
+        url: `kick:${channelName}`,
         group: "Kick",
       };
 
@@ -549,7 +543,13 @@ function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
 }
 
 function ChannelSelectorView() {
-  const { playlists, addStream, removePlaylist, renamePlaylist } = useStore();
+  const {
+    playlists,
+    addStream,
+    removePlaylist,
+    renamePlaylist,
+    removeChannelFromPlaylist,
+  } = useStore();
   const setModalView = useStore((state) => state.setModalView);
   const [expandedPlaylists, setExpandedPlaylists] = useState<
     Record<string, boolean>
@@ -699,9 +699,9 @@ function ChannelSelectorView() {
                     </div>
                   </div>
                 ) : (
-                  <div className="ml-6">
+                  <div className="group ml-6 flex items-center gap-2">
                     <button
-                      className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="grid min-w-0 flex-1 grid-cols-[auto_1fr_auto] items-center gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
                       onClick={() => addStream(item.data)}
                       type="button"
                     >
@@ -711,6 +711,20 @@ function ChannelSelectorView() {
                       />
                       <span className="truncate">{item.data.name}</span>
                       <Play className="h-3 w-3 opacity-50" />
+                    </button>
+                    <button
+                      className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeChannelFromPlaylist(
+                          item.playlistId,
+                          item.data.id
+                        );
+                      }}
+                      title="Delete channel"
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 )}

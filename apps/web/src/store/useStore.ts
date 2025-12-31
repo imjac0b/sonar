@@ -57,9 +57,10 @@ interface AppState {
   // Actions
   addPlaylist: (playlist: Playlist) => void;
   addChannelToPlaylist: (playlistId: string, channel: Channel) => void;
+  removeChannelFromPlaylist: (playlistId: string, channelId: string) => void;
   renamePlaylist: (id: string, name: string) => void;
   removePlaylist: (id: string) => void;
-  addStream: (channel: Channel) => void;
+  addStream: (channel: Channel) => Promise<void>;
   removeStream: (id: string) => void;
   selectStream: (id: string | null) => void;
   setModalOpen: (isOpen: boolean) => void;
@@ -117,6 +118,18 @@ export const useStore = create<AppState>()(
           ),
         })),
 
+      removeChannelFromPlaylist: (playlistId, channelId) =>
+        set((state) => ({
+          playlists: state.playlists.map((p) =>
+            p.id === playlistId
+              ? {
+                  ...p,
+                  channels: p.channels.filter((c) => c.id !== channelId),
+                }
+              : p
+          ),
+        })),
+
       renamePlaylist: (id, name) =>
         set((state) => ({
           playlists: state.playlists.map((p) =>
@@ -129,12 +142,50 @@ export const useStore = create<AppState>()(
           playlists: state.playlists.filter((p) => p.id !== id),
         })),
 
-      addStream: (channel) =>
+      addStream: async (channel) => {
+        let streamUrl = channel.url;
+        let isKick = channel.url.startsWith("kick:");
+        let kickChannelName = "";
+
+        if (isKick) {
+          kickChannelName = channel.url.replace("kick:", "");
+        } else if (channel.group === "Kick") {
+          // Legacy support
+          isKick = true;
+          kickChannelName = channel.name;
+        }
+
+        // Handle Kick streams
+        if (isKick) {
+          try {
+            const res = await fetch(
+              `https://kick.com/api/v2/channels/${kickChannelName}/playback-url`
+            );
+            if (!res.ok) {
+              throw new Error("Failed to fetch playback URL");
+            }
+            const data = await res.json();
+            if (!data.data) {
+              throw new Error("No playback URL found");
+            }
+
+            const originalUrl = data.data;
+            const urlObj = new URL(originalUrl);
+            urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
+            streamUrl = urlObj.toString();
+          } catch (error) {
+            console.error("Failed to resolve Kick URL:", error);
+            // If we fail here, the stream won't be added properly or will rely on old logic if not returned
+            // But we should probably return here to avoid adding a broken stream
+            return;
+          }
+        }
+
         set((state) => {
           const newStream: Stream = {
             id: crypto.randomUUID(),
             channelId: channel.id,
-            url: channel.url,
+            url: streamUrl,
             title: channel.name,
             logo: channel.logo,
             status: "playing",
@@ -144,7 +195,8 @@ export const useStore = create<AppState>()(
             selectedStreamId: newStream.id,
             ui: { ...state.ui, isModalOpen: false },
           };
-        }),
+        });
+      },
 
       removeStream: (id) =>
         set((state) => {
