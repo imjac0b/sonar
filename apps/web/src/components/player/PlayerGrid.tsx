@@ -1,3 +1,4 @@
+import { Kbd } from "@/components/shadcn/kbd";
 import { useStore } from "@/store/useStore";
 import { StreamPlayer } from "./StreamPlayer";
 
@@ -7,8 +8,22 @@ export function PlayerGrid() {
 
   if (count === 0) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-muted-foreground">
-        <p>Press '+' to add a stream</p>
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-background">
+        <h1 className="font-bold text-6xl">Sonar</h1>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-8">
+            <span className="text-muted-foreground">Add stream</span>
+            <Kbd>+</Kbd>
+          </div>
+          <div className="flex items-center justify-between gap-8">
+            <span className="text-muted-foreground">Settings</span>
+            <Kbd>,</Kbd>
+          </div>
+          <div className="flex items-center justify-between gap-8">
+            <span className="text-muted-foreground">Remove stream</span>
+            <Kbd>Del</Kbd>
+          </div>
+        </div>
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   ChevronDown,
   ChevronRight,
+  FileText,
   Folder,
   Play,
   Plus,
@@ -145,6 +146,36 @@ function Label({
 
 // --- Sub-Components ---
 
+function WelcomeOption({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-all hover:bg-accent hover:text-accent-foreground"
+      onClick={onClick}
+      type="button"
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="grid gap-1">
+        <h3 className="font-semibold text-base">{title}</h3>
+        <p className="text-muted-foreground text-sm leading-snug">
+          {description}
+        </p>
+      </div>
+    </button>
+  );
+}
+
 function WelcomeView({
   onSelect,
 }: {
@@ -152,16 +183,18 @@ function WelcomeView({
 }) {
   return (
     <div className="grid gap-4 py-4">
-      <Button className="h-16 text-lg" onClick={() => onSelect("add-xtream")}>
-        Add Xtream Account
-      </Button>
-      <Button
-        className="h-16 text-lg"
+      <WelcomeOption
+        description="Connect to your provider using server URL, username and password."
+        icon={Tv}
+        onClick={() => onSelect("add-xtream")}
+        title="Xtream Codes API"
+      />
+      <WelcomeOption
+        description="Load a playlist from a remote URL or upload a local .m3u file."
+        icon={FileText}
         onClick={() => onSelect("add-m3u")}
-        variant="outline"
-      >
-        Upload M3U Playlist
-      </Button>
+        title="M3U Playlist"
+      />
     </div>
   );
 }

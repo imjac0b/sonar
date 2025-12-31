@@ -61,11 +61,21 @@ function handleGlobalKeys(e: KeyboardEvent) {
   }
 
   const state = useStore.getState();
-  const { selectedStreamId, removeStream, setModalOpen, setModalView } = state;
+  const {
+    selectedStreamId,
+    removeStream,
+    setModalOpen,
+    setModalView,
+    playlists,
+  } = state;
 
   if (e.key === "+" || e.key === "=") {
     e.preventDefault();
-    setModalView("channel-selector");
+    if (playlists.length === 0) {
+      setModalView("welcome");
+    } else {
+      setModalView("channel-selector");
+    }
     setModalOpen(true);
     return;
   }
