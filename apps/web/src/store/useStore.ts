@@ -60,7 +60,7 @@ interface AppState {
   removeChannelFromPlaylist: (playlistId: string, channelId: string) => void;
   renamePlaylist: (id: string, name: string) => void;
   removePlaylist: (id: string) => void;
-  addStream: (channel: Channel) => Promise<void>;
+  addStream: (channel: Channel) => void;
   removeStream: (id: string) => void;
   selectStream: (id: string | null) => void;
   setModalOpen: (isOpen: boolean) => void;
@@ -142,42 +142,16 @@ export const useStore = create<AppState>()(
           playlists: state.playlists.filter((p) => p.id !== id),
         })),
 
-      addStream: async (channel) => {
+      addStream: (channel) => {
         let streamUrl = channel.url;
         let isKick = channel.url.startsWith("kick:");
-        let kickChannelName = "";
 
-        if (isKick) {
-          kickChannelName = channel.url.replace("kick:", "");
-        } else if (channel.group === "Kick") {
-          // Legacy support
+        // For legacy support or if group is "Kick", treat as Kick stream
+        if (!isKick && channel.group === "Kick") {
           isKick = true;
-          kickChannelName = channel.name;
-        }
-
-        // Handle Kick streams
-        if (isKick) {
-          try {
-            const res = await fetch(
-              `https://kick.com/api/v2/channels/${kickChannelName}/playback-url`
-            );
-            if (!res.ok) {
-              throw new Error("Failed to fetch playback URL");
-            }
-            const data = await res.json();
-            if (!data.data) {
-              throw new Error("No playback URL found");
-            }
-
-            const originalUrl = data.data;
-            const urlObj = new URL(originalUrl);
-            urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
-            streamUrl = urlObj.toString();
-          } catch (error) {
-            console.error("Failed to resolve Kick URL:", error);
-            // If we fail here, the stream won't be added properly or will rely on old logic if not returned
-            // But we should probably return here to avoid adding a broken stream
-            return;
+          // Ensure we store it as a kick identifier if it's not already
+          if (!streamUrl.startsWith("kick:")) {
+            streamUrl = `kick:${channel.name}`;
           }
         }
 
