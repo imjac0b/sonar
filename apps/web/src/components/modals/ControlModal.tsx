@@ -28,6 +28,7 @@ import {
   CredenzaHeader,
   CredenzaTitle,
 } from "@/components/ui/credenza";
+import { fetch } from "@/lib/fetch";
 import { parseM3U } from "@/lib/m3u-parser";
 import { cn } from "@/lib/utils";
 import { type XtreamAccount, XtreamClient } from "@/lib/xtream-client";

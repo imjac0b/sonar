@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { isTauri } from "@tauri-apps/api/core";
 import { isHLSProvider, MediaPlayer, MediaProvider } from "@vidstack/react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
+import { fetch } from "@/lib/fetch";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
 import { cn } from "@/lib/utils";
 import { type Stream, useStore } from "@/store/useStore";
 import "@vidstack/react/player/styles/base.css";
-import { isTauri } from "@tauri-apps/api/core";
 
 async function resolveKickUrl(channelName: string): Promise<string> {
   const res = await fetch(

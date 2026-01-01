@@ -1,3 +1,5 @@
+import { fetch } from "@/lib/fetch";
+
 export interface XtreamAccount {
   url: string;
   username: string;
