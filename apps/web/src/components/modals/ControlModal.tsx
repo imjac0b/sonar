@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { MadeBy } from "@/components/made-by";
+import { Checkbox } from "@/components/shadcn/checkbox";
 import { useTheme } from "@/components/theme-provider";
 import {
   Credenza,
@@ -526,39 +527,43 @@ function AddKickView({
   );
 }
 
-function SettingsView({ onBack }: { onBack: () => void }) {
+function SettingsView({ onBack }: { onBack?: () => void }) {
   const { settings, toggleSetting } = useStore();
   const { theme, setTheme } = useTheme();
 
   return (
     <div className="grid gap-4 py-4">
-      <label className="flex cursor-pointer items-center justify-between space-x-2">
+      <label
+        className="flex cursor-pointer items-center justify-between space-x-2"
+        htmlFor="focus-mode"
+      >
         <span className="flex flex-col space-y-1">
           <span className="font-medium text-sm leading-none">Focus Mode</span>
           <span className="font-normal text-muted-foreground text-xs">
             Only play audio from the selected stream
           </span>
         </span>
-        <input
+        <Checkbox
           checked={settings.focusMode}
-          className="h-4 w-4"
-          onChange={() => toggleSetting("focusMode")}
-          type="checkbox"
+          id="focus-mode"
+          onCheckedChange={() => toggleSetting("focusMode")}
         />
       </label>
 
-      <label className="flex cursor-pointer items-center justify-between space-x-2">
+      <label
+        className="flex cursor-pointer items-center justify-between space-x-2"
+        htmlFor="proxy-images"
+      >
         <span className="flex flex-col space-y-1">
           <span className="font-medium text-sm leading-none">Proxy Images</span>
           <span className="font-normal text-muted-foreground text-xs">
             Proxy channel icons for better reliability
           </span>
         </span>
-        <input
+        <Checkbox
           checked={settings.proxyImages}
-          className="h-4 w-4"
-          onChange={() => toggleSetting("proxyImages")}
-          type="checkbox"
+          id="proxy-images"
+          onCheckedChange={() => toggleSetting("proxyImages")}
         />
       </label>
 
@@ -616,13 +621,21 @@ function SettingsView({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="flex items-center justify-between border-t pt-4">
-        <Button onClick={onBack} variant="ghost">
-          Back
-        </Button>
-        <div className="flex items-center gap-4">
+        {onBack ? (
+          <Button onClick={onBack} variant="ghost">
+            Back
+          </Button>
+        ) : (
           <span className="text-muted-foreground text-xs">
             v{packageJson.version}
           </span>
+        )}
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <span className="text-muted-foreground text-xs">
+              v{packageJson.version}
+            </span>
+          )}
           <MadeBy />
         </div>
       </div>
@@ -868,7 +881,9 @@ function ChannelSelectorView() {
 // --- Main Modal Component ---
 
 export function ControlModal() {
-  const { isModalOpen, modalView } = useStore((state) => state.ui);
+  const { isModalOpen, modalView, previousModalView } = useStore(
+    (state) => state.ui
+  );
   const setModalOpen = useStore((state) => state.setModalOpen);
   const setModalView = useStore((state) => state.setModalView);
 
@@ -928,7 +943,13 @@ export function ControlModal() {
             />
           )}
           {modalView === "settings" && (
-            <SettingsView onBack={() => setModalView("channel-selector")} />
+            <SettingsView
+              onBack={
+                previousModalView === "channel-selector"
+                  ? () => setModalView("channel-selector")
+                  : undefined
+              }
+            />
           )}
           {modalView === "channel-selector" && <ChannelSelectorView />}
         </CredenzaBody>

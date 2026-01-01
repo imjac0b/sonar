@@ -37,16 +37,19 @@ interface Settings {
   proxyImages: boolean; // Proxy channel icons via wsrv.nl
 }
 
+type ModalView =
+  | "welcome"
+  | "add-m3u"
+  | "add-xtream"
+  | "add-kick"
+  | "channel-selector"
+  | "settings";
+
 interface UIState {
   isModalOpen: boolean;
   isPortrait: boolean;
-  modalView:
-    | "welcome"
-    | "add-m3u"
-    | "add-xtream"
-    | "add-kick"
-    | "channel-selector"
-    | "settings";
+  modalView: ModalView;
+  previousModalView: ModalView | null;
 }
 
 interface AppState {
@@ -110,11 +113,9 @@ export const useStore = create<AppState>()(
       },
       ui: {
         isModalOpen: true,
-        isPortrait:
-          typeof window !== "undefined"
-            ? window.innerHeight > window.innerWidth
-            : false,
+        isPortrait: false, // Set correctly on mount via resize listener
         modalView: "welcome",
+        previousModalView: null,
       },
 
       setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
@@ -202,10 +203,23 @@ export const useStore = create<AppState>()(
       selectStream: (id) => set({ selectedStreamId: id }),
 
       setModalOpen: (isOpen) =>
-        set((state) => ({ ui: { ...state.ui, isModalOpen: isOpen } })),
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            isModalOpen: isOpen,
+            // Reset previousModalView when closing the modal
+            previousModalView: isOpen ? state.ui.previousModalView : null,
+          },
+        })),
 
       setModalView: (view) =>
-        set((state) => ({ ui: { ...state.ui, modalView: view } })),
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            previousModalView: state.ui.modalView,
+            modalView: view,
+          },
+        })),
 
       setPortrait: (isPortrait) =>
         set((state) => ({ ui: { ...state.ui, isPortrait } })),

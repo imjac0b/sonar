@@ -9,5 +9,5 @@ export function cn(...inputs: ClassValue[]) {
  * Proxy an image URL through wsrv.nl for better reliability and caching
  */
 export function proxyImageUrl(url: string): string {
-  return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+  return `https://wsrv.nl/?${new URLSearchParams({ url, output: "webp" }).toString()}`;
 }
