@@ -287,10 +287,10 @@ function AddM3UView({
 
   const getError = () => {
     if (fileMutation.error) {
-      return "Failed to parse file";
+      return fileMutation.error.message || "Failed to parse file";
     }
     if (urlMutation.error) {
-      return "Failed to fetch or parse URL";
+      return urlMutation.error.message || "Failed to fetch or parse URL";
     }
     return "";
   };
@@ -391,7 +391,7 @@ function AddXtreamView({
 
   const isLoading = connectMutation.isPending;
   const error = connectMutation.error
-    ? "Failed to connect or fetch streams"
+    ? connectMutation.error.message || "Failed to connect or fetch streams"
     : "";
 
   return (
@@ -498,7 +498,8 @@ function AddKickView({
 
   const isLoading = addKickMutation.isPending;
   const error = addKickMutation.error
-    ? "Failed to add Kick stream. Make sure the channel is live."
+    ? addKickMutation.error.message ||
+      "Failed to add Kick stream. Make sure the channel is live."
     : "";
 
   return (

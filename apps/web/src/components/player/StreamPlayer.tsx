@@ -184,13 +184,17 @@ export function StreamPlayer({
   const isLoading = isKickStream
     ? isUrlLoading || playerLoading
     : playerLoading;
-  const error = urlError ? "Failed to load Kick stream" : playerError;
+  const error = urlError
+    ? (urlError as Error).message || "Failed to load Kick stream"
+    : playerError;
   const isMuted = !isAudioEnabled || (focusMode ? !isSelected : manualMute);
   const isTitleVisible = isSelected || alwaysShowTitle;
 
   const handleError = (e: unknown) => {
     setPlayerLoading(false);
-    setPlayerError("Failed to load stream");
+    const message =
+      e instanceof Error ? e.message : String(e) || "Failed to load stream";
+    setPlayerError(message);
     console.error("Stream Error:", e);
   };
 
