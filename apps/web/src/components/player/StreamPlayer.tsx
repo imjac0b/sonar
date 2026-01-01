@@ -130,7 +130,7 @@ export function StreamPlayer({
         {/* Title Overlay */}
         <div
           className={cn(
-            "absolute top-0 left-0 z-20 flex items-center gap-2 bg-black/60 p-2 font-medium text-white text-xs transition-opacity duration-200",
+            "absolute top-0 left-0 z-20 flex items-center gap-2 rounded-br-lg bg-black/60 p-2 font-medium text-white text-xs transition-opacity duration-200",
             isSelected ? "opacity-100" : "opacity-0 hover:opacity-100"
           )}
         >
