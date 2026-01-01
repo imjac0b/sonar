@@ -1,6 +1,6 @@
 [package]
-name = "sonar"
-version = "0.1.0"
+name = "Sonar"
+version = "1.0.0"
 description = "Sonar"
 authors = ["imjac0b"]
 license = ""

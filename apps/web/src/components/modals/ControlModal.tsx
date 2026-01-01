@@ -31,6 +31,7 @@ import { parseM3U } from "@/lib/m3u-parser";
 import { cn } from "@/lib/utils";
 import { type XtreamAccount, XtreamClient } from "@/lib/xtream-client";
 import { type Channel, type Playlist, useStore } from "@/store/useStore";
+import packageJson from "../../../package.json";
 
 type FlatItem =
   | { type: "header"; data: Playlist }
@@ -573,7 +574,12 @@ function SettingsView({ onBack }: { onBack: () => void }) {
         <Button onClick={onBack} variant="ghost">
           Back
         </Button>
-        <MadeBy />
+        <div className="flex items-center gap-4">
+          <span className="text-muted-foreground text-xs">
+            v{packageJson.version}
+          </span>
+          <MadeBy />
+        </div>
       </div>
     </div>
   );

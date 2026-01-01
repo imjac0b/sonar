@@ -1,51 +1,70 @@
-# sonar
+# Sonar
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Router, and more.
+A modern, cross-platform media player for IPTV streams and M3U playlists. Built with React, TypeScript, and Tauri for desktop distribution.
 
 ## Features
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Router** - File-based routing with full type safety
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **shadcn/ui** - Reusable UI components
-- **Biome** - Linting and formatting
-- **Turborepo** - Optimized monorepo build system
+- **IPTV Support** - Connect to Xtream API servers for live TV streaming
+- **M3U Playlist Support** - Import and play M3U playlist files
+- **HLS Playback** - High-quality streaming with HLS.js
+- **Modern UI** - Beautiful interface built with shadcn/ui components
+- **Dark/Light Theme** - Automatic theme switching with system preference support
+- **Focus Mode** - Audio-only playback for background listening
+- **Cross-Platform** - Desktop app built with Tauri (Windows, macOS, Linux)
+- **Fast & Responsive** - Built with React and optimized for performance
 
-## Getting Started
+## Usage
 
-First, install the dependencies:
+### Adding IPTV Sources
 
-```bash
-bun install
-```
+1. Open the app and go to the channel selector
+2. Enter your Xtream API credentials (URL, Username, Password)
+3. Browse and select channels to play
 
+### Loading M3U Playlists
 
-Then, run the development server:
+1. Go to Settings in the control panel
+2. Use the playlist import feature to load M3U files
+3. Browse and play channels from your playlists
 
-```bash
-bun run dev
-```
+### Playback Controls
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-
-
-
-
-
-
+- **Grid View**: Browse channels in a grid layout
+- **Focus Mode**: Toggle audio-only playback
+- **Theme**: Switch between light/dark themes
+- **Settings**: Access advanced options
 
 ## Project Structure
 
 ```
 sonar/
 ├── apps/
-│   ├── web/         # Frontend application (React + TanStack Router)
+│   ├── web/                    # Frontend React application
+│   │   ├── src/
+│   │   │   ├── components/     # UI components
+│   │   │   ├── lib/           # Utilities and API clients
+│   │   │   ├── routes/        # TanStack Router pages
+│   │   │   └── store/         # Zustand state management
+│   │   └── src-tauri/         # Tauri desktop app
+├── packages/
+│   ├── config/                # Shared TypeScript/Biome config
+│   └── env/                   # Environment configuration
 ```
 
-## Available Scripts
+## Tech Stack
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run check`: Run Biome formatting and linting
+- **Frontend**: React 19, TypeScript, TanStack Router
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Video**: HLS.js, VidStack player
+- **State**: Zustand
+- **Build**: Vite, Turborepo
+- **Desktop**: Tauri (Rust)
+- **Linting**: Biome
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+If you find this project helpful, please consider starring the repository!

@@ -22,13 +22,15 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
       {
         name: "description",
-        content: "sonar is a web application",
+        content:
+          "A modern IPTV streaming application built with Tauri and React",
       },
     ],
     links: [
       {
         rel: "icon",
-        href: "/favicon.ico",
+        href: "/sonar.svg",
+        type: "image/svg+xml",
       },
     ],
   }),
