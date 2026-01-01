@@ -34,10 +34,12 @@ export interface Stream {
 
 interface Settings {
   focusMode: boolean; // Mute others when selected
+  proxyImages: boolean; // Proxy channel icons via wsrv.nl
 }
 
 interface UIState {
   isModalOpen: boolean;
+  isPortrait: boolean;
   modalView:
     | "welcome"
     | "add-m3u"
@@ -67,6 +69,7 @@ interface AppState {
   selectStream: (id: string | null) => void;
   setModalOpen: (isOpen: boolean) => void;
   setModalView: (view: UIState["modalView"]) => void;
+  setPortrait: (isPortrait: boolean) => void;
   toggleSetting: (key: keyof Settings) => void;
 }
 
@@ -103,9 +106,14 @@ export const useStore = create<AppState>()(
       isAudioEnabled: isTauri(),
       settings: {
         focusMode: false,
+        proxyImages: false,
       },
       ui: {
         isModalOpen: true,
+        isPortrait:
+          typeof window !== "undefined"
+            ? window.innerHeight > window.innerWidth
+            : false,
         modalView: "welcome",
       },
 
@@ -198,6 +206,9 @@ export const useStore = create<AppState>()(
 
       setModalView: (view) =>
         set((state) => ({ ui: { ...state.ui, modalView: view } })),
+
+      setPortrait: (isPortrait) =>
+        set((state) => ({ ui: { ...state.ui, isPortrait } })),
 
       toggleSetting: (key) =>
         set((state) => ({

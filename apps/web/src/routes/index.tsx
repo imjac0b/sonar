@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { MobileControls } from "@/components/MobileControls";
 import { BrowserSupportModal } from "@/components/modals/BrowserSupportModal";
 import { ControlModal } from "@/components/modals/ControlModal";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
@@ -14,7 +15,9 @@ function calculateNewIndex(
   count: number,
   key: string
 ): number {
-  const cols = Math.ceil(Math.sqrt(count));
+  // Use portrait mode from store (kept in sync via resize listener)
+  const { isPortrait } = useStore.getState().ui;
+  const cols = isPortrait ? 1 : Math.ceil(Math.sqrt(count));
 
   switch (key) {
     case "ArrowRight":
@@ -104,6 +107,24 @@ function handleGlobalKeys(e: KeyboardEvent) {
 }
 
 function HomeComponent() {
+  const setPortrait = useStore((state) => state.setPortrait);
+
+  // Keep portrait state in sync with window size
+  useEffect(() => {
+    const updatePortrait = () => {
+      setPortrait(window.innerHeight > window.innerWidth);
+    };
+
+    updatePortrait();
+    window.addEventListener("resize", updatePortrait);
+    window.addEventListener("orientationchange", updatePortrait);
+
+    return () => {
+      window.removeEventListener("resize", updatePortrait);
+      window.removeEventListener("orientationchange", updatePortrait);
+    };
+  }, [setPortrait]);
+
   useEffect(() => {
     window.addEventListener("keydown", handleGlobalKeys);
     return () => window.removeEventListener("keydown", handleGlobalKeys);
@@ -112,6 +133,7 @@ function HomeComponent() {
   return (
     <>
       <PlayerGrid />
+      <MobileControls />
       <ControlModal />
       <BrowserSupportModal />
     </>

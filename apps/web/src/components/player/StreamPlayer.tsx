@@ -5,7 +5,7 @@ import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import { fetch } from "@/lib/fetch";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
-import { cn } from "@/lib/utils";
+import { cn, proxyImageUrl } from "@/lib/utils";
 import { type Stream, useStore } from "@/store/useStore";
 import "@vidstack/react/player/styles/base.css";
 
@@ -42,6 +42,7 @@ export function StreamPlayer({
   const [playerLoading, setPlayerLoading] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const focusMode = useStore((state) => state.settings.focusMode);
+  const proxyImages = useStore((state) => state.settings.proxyImages);
   const isAudioEnabled = useStore((state) => state.isAudioEnabled);
 
   const isKickStream = stream.url.startsWith("kick:");
@@ -98,7 +99,7 @@ export function StreamPlayer({
         )}
 
         <MediaPlayer
-          autoplay
+          autoPlay
           className="h-full w-full"
           controls={false}
           muted={isMuted}
@@ -120,6 +121,7 @@ export function StreamPlayer({
               }
             }
           }}
+          playsInline
           src={streamUrl ?? ""}
         >
           <MediaProvider className="h-full w-full object-cover" />
@@ -137,7 +139,7 @@ export function StreamPlayer({
               alt={stream.title}
               className="h-4 w-4 object-contain"
               height={16}
-              src={stream.logo}
+              src={proxyImages ? proxyImageUrl(stream.logo) : stream.logo}
               width={16}
             />
           )}

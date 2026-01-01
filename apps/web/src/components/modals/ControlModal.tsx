@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/credenza";
 import { fetch } from "@/lib/fetch";
 import { parseM3U } from "@/lib/m3u-parser";
-import { cn } from "@/lib/utils";
+import { cn, proxyImageUrl } from "@/lib/utils";
 import { type XtreamAccount, XtreamClient } from "@/lib/xtream-client";
 import { type Channel, type Playlist, useStore } from "@/store/useStore";
 import packageJson from "../../../package.json";
@@ -547,6 +547,21 @@ function SettingsView({ onBack }: { onBack: () => void }) {
         />
       </label>
 
+      <label className="flex cursor-pointer items-center justify-between space-x-2">
+        <span className="flex flex-col space-y-1">
+          <span className="font-medium text-sm leading-none">Proxy Images</span>
+          <span className="font-normal text-muted-foreground text-xs">
+            Proxy channel icons for better reliability
+          </span>
+        </span>
+        <input
+          checked={settings.proxyImages}
+          className="h-4 w-4"
+          onChange={() => toggleSetting("proxyImages")}
+          type="checkbox"
+        />
+      </label>
+
       <div className="flex items-center justify-between">
         <span className="flex flex-col space-y-1">
           <span className="font-medium text-sm leading-none">Theme</span>
@@ -617,10 +632,13 @@ function SettingsView({ onBack }: { onBack: () => void }) {
 
 function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
   const [error, setError] = useState(false);
+  const proxyImages = useStore((state) => state.settings.proxyImages);
 
   if (!logo || error) {
     return <Tv className="h-4 w-4 shrink-0 text-muted-foreground" />;
   }
+
+  const src = proxyImages ? proxyImageUrl(logo) : logo;
 
   return (
     // biome-ignore lint/a11y/noNoninteractiveElementInteractions: onError is for image loading failures
@@ -630,7 +648,7 @@ function ChannelIcon({ logo, name }: { logo?: string; name: string }) {
       height={16}
       loading="lazy"
       onError={() => setError(true)}
-      src={logo}
+      src={src}
       width={16}
     />
   );
