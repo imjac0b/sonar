@@ -80,6 +80,8 @@ export function PlayerGrid() {
   // Calculate grid dimensions - single column in portrait mode
   const cols = isPortrait ? 1 : Math.ceil(Math.sqrt(count));
   const rows = isPortrait ? count : Math.ceil(count / cols);
+  const totalCells = cols * rows;
+  const emptySpaces = totalCells - count;
 
   return (
     <div
@@ -97,6 +99,16 @@ export function PlayerGrid() {
           stream={stream}
         />
       ))}
+      {Array.from({ length: emptySpaces }, (_, i) => `empty-${count}-${i}`).map(
+        (key) => (
+          <div
+            className="flex items-center justify-center font-bold text-2xl text-muted"
+            key={key}
+          >
+            Sonar
+          </div>
+        )
+      )}
     </div>
   );
 }
