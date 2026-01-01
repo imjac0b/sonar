@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   ChevronDown,
@@ -222,55 +223,76 @@ function AddM3UView({
 }) {
   const addPlaylist = useStore((state) => state.addPlaylist);
   const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setLoading(true);
-    try {
+  const fileMutation = useMutation({
+    mutationFn: async (file: File) => {
       const text = await file.text();
       const channels = parseM3U(text);
+      return {
+        name: file.name.replace(".m3u8", "").replace(".m3u", ""),
+        channels,
+      };
+    },
+    onSuccess: (data: { name: string; channels: Channel[] }) => {
       addPlaylist({
         id: crypto.randomUUID(),
-        name: file.name.replace(".m3u8", "").replace(".m3u", ""),
+        name: data.name,
         type: "m3u",
-        channels,
+        channels: data.channels,
       });
       onComplete();
-    } catch {
-      setError("Failed to parse file");
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const urlMutation = useMutation({
+    mutationFn: async (playlistUrl: string) => {
+      const res = await fetch(playlistUrl);
+      if (!res.ok) {
+        throw new Error("Failed to fetch playlist");
+      }
+      const text = await res.text();
+      const channels = parseM3U(text);
+      return {
+        name: playlistUrl.split("/").pop() || "Remote Playlist",
+        channels,
+      };
+    },
+    onSuccess: (data: { name: string; channels: Channel[] }) => {
+      addPlaylist({
+        id: crypto.randomUUID(),
+        name: data.name,
+        type: "m3u",
+        channels: data.channels,
+      });
+      onComplete();
+    },
+  });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      fileMutation.mutate(file);
     }
   };
 
-  const handleUrlSubmit = async () => {
-    if (!url) {
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      const channels = parseM3U(text);
-      addPlaylist({
-        id: crypto.randomUUID(),
-        name: url.split("/").pop() || "Remote Playlist",
-        type: "m3u",
-        channels,
-      });
-      onComplete();
-    } catch {
-      setError("Failed to fetch or parse URL");
-    } finally {
-      setLoading(false);
+  const handleUrlSubmit = () => {
+    if (url) {
+      urlMutation.mutate(url);
     }
   };
+
+  const isLoading = fileMutation.isPending || urlMutation.isPending;
+
+  const getError = () => {
+    if (fileMutation.error) {
+      return "Failed to parse file";
+    }
+    if (urlMutation.error) {
+      return "Failed to fetch or parse URL";
+    }
+    return "";
+  };
+  const error = getError();
 
   return (
     <div className="grid gap-4 py-4">
@@ -283,7 +305,7 @@ function AddM3UView({
             placeholder="https://example.com/playlist.m3u"
             value={url}
           />
-          <Button disabled={loading} onClick={handleUrlSubmit}>
+          <Button disabled={isLoading} onClick={handleUrlSubmit}>
             Add
           </Button>
         </div>
@@ -303,7 +325,7 @@ function AddM3UView({
       <Input
         accept=".m3u,.m3u8"
         aria-label="Upload M3U file"
-        disabled={loading}
+        disabled={isLoading}
         onChange={handleFileUpload}
         type="file"
       />
@@ -329,14 +351,10 @@ function AddXtreamView({
     username: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const client = new XtreamClient(config);
+  const connectMutation = useMutation({
+    mutationFn: async (xtreamConfig: XtreamAccount) => {
+      const client = new XtreamClient(xtreamConfig);
       await client.authenticate();
       const streams = await client.getStreams();
       const channels: Channel[] = streams.map((s) => ({
@@ -349,21 +367,33 @@ function AddXtreamView({
         group: s.category_id,
         logo: s.stream_icon,
       }));
-
+      return {
+        name: new URL(xtreamConfig.url).hostname,
+        channels,
+      };
+    },
+    onSuccess: (data: { name: string; channels: Channel[] }) => {
       addPlaylist({
         id: crypto.randomUUID(),
-        name: new URL(config.url).hostname,
+        name: data.name,
         type: "xtream",
-        channels,
+        channels: data.channels,
       });
       onComplete();
-    } catch (err) {
+    },
+    onError: (err: Error) => {
       console.error(err);
-      setError("Failed to connect or fetch streams");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleSubmit = () => {
+    connectMutation.mutate(config);
   };
+
+  const isLoading = connectMutation.isPending;
+  const error = connectMutation.error
+    ? "Failed to connect or fetch streams"
+    : "";
 
   return (
     <div className="grid gap-4 py-4">
@@ -400,8 +430,8 @@ function AddXtreamView({
         <Button onClick={onBack} variant="ghost">
           Back
         </Button>
-        <Button disabled={loading} onClick={handleSubmit}>
-          {loading ? "Connecting..." : "Connect"}
+        <Button disabled={isLoading} onClick={handleSubmit}>
+          {isLoading ? "Connecting..." : "Connect"}
         </Button>
       </div>
     </div>
@@ -419,19 +449,11 @@ function AddKickView({
   const addChannelToPlaylist = useStore((state) => state.addChannelToPlaylist);
   const playlists = useStore((state) => state.playlists);
   const [channelName, setChannelName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
-    if (!channelName) {
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    try {
+  const addKickMutation = useMutation({
+    mutationFn: async (name: string) => {
       const res = await fetch(
-        `https://kick.com/api/v2/channels/${channelName}/playback-url`
+        `https://kick.com/api/v2/channels/${name}/playback-url`
       );
       if (!res.ok) {
         throw new Error("Failed to fetch playback URL");
@@ -442,13 +464,14 @@ function AddKickView({
         throw new Error("No playback URL found");
       }
 
-      const channel: Channel = {
+      return {
         id: crypto.randomUUID(),
-        name: channelName,
-        url: `kick:${channelName}`,
+        name,
+        url: `kick:${name}`,
         group: "Kick",
-      };
-
+      } as Channel;
+    },
+    onSuccess: (channel: Channel) => {
       const kickPlaylist = playlists.find((p) => p.type === "kick");
 
       if (kickPlaylist) {
@@ -462,13 +485,22 @@ function AddKickView({
         });
       }
       onComplete();
-    } catch (err) {
+    },
+    onError: (err: Error) => {
       console.error(err);
-      setError("Failed to add Kick stream. Make sure the channel is live.");
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const handleSubmit = () => {
+    if (channelName) {
+      addKickMutation.mutate(channelName);
     }
   };
+
+  const isLoading = addKickMutation.isPending;
+  const error = addKickMutation.error
+    ? "Failed to add Kick stream. Make sure the channel is live."
+    : "";
 
   return (
     <div className="grid gap-4 py-4">
@@ -481,7 +513,7 @@ function AddKickView({
             placeholder="e.g. xqc"
             value={channelName}
           />
-          <Button disabled={loading} onClick={handleSubmit}>
+          <Button disabled={isLoading} onClick={handleSubmit}>
             Add
           </Button>
         </div>

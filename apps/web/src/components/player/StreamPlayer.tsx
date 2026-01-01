@@ -1,11 +1,30 @@
+import { useQuery } from "@tanstack/react-query";
 import { isHLSProvider, MediaPlayer, MediaProvider } from "@vidstack/react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
 import { cn } from "@/lib/utils";
 import { type Stream, useStore } from "@/store/useStore";
 import "@vidstack/react/player/styles/base.css";
 import { isTauri } from "@tauri-apps/api/core";
+
+async function resolveKickUrl(channelName: string): Promise<string> {
+  const res = await fetch(
+    `https://kick.com/api/v2/channels/${channelName}/playback-url`
+  );
+  if (!res.ok) {
+    throw new Error("Failed to fetch playback URL");
+  }
+  const data = await res.json();
+  if (!data.data) {
+    throw new Error("No playback URL found");
+  }
+
+  const originalUrl = data.data;
+  const urlObj = new URL(originalUrl);
+  urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
+  return urlObj.toString();
+}
 
 interface StreamPlayerProps {
   stream: Stream;
@@ -18,69 +37,33 @@ export function StreamPlayer({
   isSelected,
   onSelect,
 }: StreamPlayerProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [manualMute, setManualMute] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+  const [playerLoading, setPlayerLoading] = useState(true);
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const focusMode = useStore((state) => state.settings.focusMode);
   const isAudioEnabled = useStore((state) => state.isAudioEnabled);
 
-  // Effect to resolve URL if needed (e.g. Kick streams)
-  useEffect(() => {
-    let mounted = true;
+  const isKickStream = stream.url.startsWith("kick:");
+  const channelName = isKickStream ? stream.url.replace("kick:", "") : "";
 
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: we need to resolve the URL if it's a Kick stream
-    const resolveUrl = async () => {
-      // If the URL is already a resolved Kick URL, we might need to refresh it if it fails.
-      // But for now, let's assume if it starts with "kick:", we need to resolve it.
-      // Also check for legacy persisted URLs that might be stale but don't start with "kick:".
-      // Since we can't easily distinguish a stale URL from a valid one without trying it,
-      // we rely on the store update to ensure new streams use "kick:" prefix.
+  const {
+    data: resolvedUrl,
+    isLoading: isUrlLoading,
+    error: urlError,
+  } = useQuery({
+    queryKey: ["kick-stream-url", channelName],
+    queryFn: () => resolveKickUrl(channelName),
+    enabled: isKickStream,
+    staleTime: 1000 * 60 * 30, // 30 minutes - Kick URLs are valid for a while
+    retry: 2,
+  });
 
-      if (stream.url.startsWith("kick:")) {
-        const channelName = stream.url.replace("kick:", "");
-        try {
-          setIsLoading(true);
-
-          const res = await fetch(
-            `https://kick.com/api/v2/channels/${channelName}/playback-url`
-          );
-          if (!res.ok) {
-            throw new Error("Failed to fetch playback URL");
-          }
-          const data = await res.json();
-          if (!data.data) {
-            throw new Error("No playback URL found");
-          }
-
-          const originalUrl = data.data;
-          const urlObj = new URL(originalUrl);
-          urlObj.hostname = "d2xr8tsefxgeo0.cloudfront.net";
-
-          if (mounted) {
-            setResolvedUrl(urlObj.toString());
-            setIsLoading(false);
-            setError(null);
-          }
-        } catch (err) {
-          console.error("Failed to resolve Kick URL:", err);
-          if (mounted) {
-            setError("Failed to load Kick stream");
-            setIsLoading(false);
-          }
-        }
-      } else {
-        setResolvedUrl(stream.url);
-        setIsLoading(false);
-      }
-    };
-
-    resolveUrl();
-
-    return () => {
-      mounted = false;
-    };
-  }, [stream.url]);
+  // For non-Kick streams, use the URL directly
+  const streamUrl = isKickStream ? resolvedUrl : stream.url;
+  const isLoading = isKickStream
+    ? isUrlLoading || playerLoading
+    : playerLoading;
+  const error = urlError ? "Failed to load Kick stream" : playerError;
 
   // In focus mode, mute all streams except selected
   // Otherwise use manual mute state
@@ -118,13 +101,13 @@ export function StreamPlayer({
           className="h-full w-full"
           controls={false}
           muted={isMuted}
-          onCanPlay={() => setIsLoading(false)}
+          onCanPlay={() => setPlayerLoading(false)}
           onError={(e) => {
-            setIsLoading(false);
-            setError("Failed to load stream");
+            setPlayerLoading(false);
+            setPlayerError("Failed to load stream");
             console.error("Stream Error:", e);
           }}
-          onPlay={() => setIsLoading(false)}
+          onPlay={() => setPlayerLoading(false)}
           onProviderChange={(provider) => {
             if (isHLSProvider(provider)) {
               provider.library = () => import("hls.js");
@@ -136,7 +119,7 @@ export function StreamPlayer({
               }
             }
           }}
-          src={resolvedUrl ?? ""}
+          src={streamUrl ?? ""}
         >
           <MediaProvider className="h-full w-full object-cover" />
         </MediaPlayer>
