@@ -6,8 +6,8 @@ import {
   MediaProvider,
   type MediaProviderAdapter,
 } from "@vidstack/react";
-import { Loader2, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Tv, Volume2, VolumeX } from "lucide-react";
+import { type SyntheticEvent, useState } from "react";
 import { fetch } from "@/lib/fetch";
 import { TauriHlsLoader } from "@/lib/tauri-hls-loader";
 import { cn, proxyImageUrl } from "@/lib/utils";
@@ -51,6 +51,43 @@ function ErrorOverlay({ error }: { error: string }) {
   );
 }
 
+function ChannelIcon({
+  logo,
+  title,
+  proxyImages,
+}: {
+  logo: string | undefined;
+  title: string;
+  proxyImages: boolean;
+}) {
+  const [hasError, setHasError] = useState(false);
+  let logoSrc: string | undefined;
+  if (logo) {
+    logoSrc = proxyImages ? proxyImageUrl(logo) : logo;
+  }
+
+  const handleError = (e: SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.style.display = "none";
+    setHasError(true);
+  };
+
+  if (!logoSrc || hasError) {
+    return <Tv className="h-4 w-4 shrink-0 text-muted-foreground" />;
+  }
+
+  return (
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: onError is for image loading failures
+    <img
+      alt={title}
+      className="h-4 w-4 object-contain"
+      height={16}
+      onError={handleError}
+      src={logoSrc}
+      width={16}
+    />
+  );
+}
+
 function TitleOverlay({
   stream,
   isVisible,
@@ -60,8 +97,6 @@ function TitleOverlay({
   isVisible: boolean;
   proxyImages: boolean;
 }) {
-  const logoSrc = proxyImages ? proxyImageUrl(stream.logo ?? "") : stream.logo;
-
   return (
     <div
       className={cn(
@@ -69,15 +104,11 @@ function TitleOverlay({
         isVisible ? "opacity-100" : "opacity-0 hover:opacity-100"
       )}
     >
-      {stream.logo && (
-        <img
-          alt={stream.title}
-          className="h-4 w-4 object-contain"
-          height={16}
-          src={logoSrc}
-          width={16}
-        />
-      )}
+      <ChannelIcon
+        logo={stream.logo}
+        proxyImages={proxyImages}
+        title={stream.title}
+      />
       {stream.title}
     </div>
   );
