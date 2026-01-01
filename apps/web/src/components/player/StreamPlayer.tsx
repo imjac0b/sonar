@@ -43,6 +43,7 @@ export function StreamPlayer({
   const [playerError, setPlayerError] = useState<string | null>(null);
   const focusMode = useStore((state) => state.settings.focusMode);
   const proxyImages = useStore((state) => state.settings.proxyImages);
+  const alwaysShowTitle = useStore((state) => state.settings.alwaysShowTitle);
   const isAudioEnabled = useStore((state) => state.isAudioEnabled);
 
   const isKickStream = stream.url.startsWith("kick:");
@@ -131,7 +132,9 @@ export function StreamPlayer({
         <div
           className={cn(
             "absolute top-0 left-0 z-20 flex items-center gap-2 rounded-br-lg bg-black/60 p-2 font-medium text-white text-xs transition-opacity duration-200",
-            isSelected ? "opacity-100" : "opacity-0 hover:opacity-100"
+            isSelected || alwaysShowTitle
+              ? "opacity-100"
+              : "opacity-0 hover:opacity-100"
           )}
         >
           {stream.logo && (

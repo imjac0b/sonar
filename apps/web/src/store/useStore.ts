@@ -35,6 +35,7 @@ export interface Stream {
 interface Settings {
   focusMode: boolean; // Mute others when selected
   proxyImages: boolean; // Proxy channel icons via wsrv.nl
+  alwaysShowTitle: boolean; // Always show title overlay on streams
 }
 
 type ModalView =
@@ -110,6 +111,7 @@ export const useStore = create<AppState>()(
       settings: {
         focusMode: false,
         proxyImages: false,
+        alwaysShowTitle: false,
       },
       ui: {
         isModalOpen: true,

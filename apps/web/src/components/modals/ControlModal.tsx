@@ -567,6 +567,25 @@ function SettingsView({ onBack }: { onBack?: () => void }) {
         />
       </label>
 
+      <label
+        className="flex cursor-pointer items-center justify-between space-x-2"
+        htmlFor="always-show-title"
+      >
+        <span className="flex flex-col space-y-1">
+          <span className="font-medium text-sm leading-none">
+            Always Show Title
+          </span>
+          <span className="font-normal text-muted-foreground text-xs">
+            Keep stream titles visible at all times
+          </span>
+        </span>
+        <Checkbox
+          checked={settings.alwaysShowTitle}
+          id="always-show-title"
+          onCheckedChange={() => toggleSetting("alwaysShowTitle")}
+        />
+      </label>
+
       <div className="flex items-center justify-between">
         <span className="flex flex-col space-y-1">
           <span className="font-medium text-sm leading-none">Theme</span>
