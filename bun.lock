@@ -19,7 +19,7 @@
     },
     "apps/web": {
       "name": "web",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "dependencies": {
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-slot": "^1.2.4",
