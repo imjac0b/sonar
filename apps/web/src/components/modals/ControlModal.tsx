@@ -693,21 +693,18 @@ function ChannelSelectorView() {
     removePlaylist,
     renamePlaylist,
     removeChannelFromPlaylist,
+    channelSelector,
+    setChannelSelectorSearch,
+    togglePlaylistExpanded,
+    setChannelSelectorScrollOffset,
   } = useStore();
   const setModalView = useStore((state) => state.setModalView);
-  const [expandedPlaylists, setExpandedPlaylists] = useState<
-    Record<string, boolean>
-  >({});
-  const [search, setSearch] = useState("");
+  const { expandedPlaylists, search, scrollOffset } = channelSelector;
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(
     null
   );
   const [editName, setEditName] = useState("");
   const parentRef = useRef<HTMLDivElement>(null);
-
-  const toggleExpand = (id: string) => {
-    setExpandedPlaylists((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const handleDeletePlaylist = (e: React.MouseEvent, playlistId: string) => {
     e.stopPropagation();
@@ -726,6 +723,10 @@ function ChannelSelectorView() {
       return flattenedItems[index].type === "header" ? 44 : 32;
     },
     overscan: 10,
+    initialOffset: scrollOffset,
+    onChange: (instance) => {
+      setChannelSelectorScrollOffset(instance.scrollOffset ?? 0);
+    },
   });
 
   if (playlists.length === 0) {
@@ -745,7 +746,7 @@ function ChannelSelectorView() {
           aria-label="Search channels"
           autoFocus
           className="pl-8"
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setChannelSelectorSearch(e.target.value)}
           onKeyDown={(e) => {
             e.stopPropagation();
           }}
@@ -783,7 +784,7 @@ function ChannelSelectorView() {
                     <div className="group flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
                       <button
                         className="grid min-w-0 flex-1 grid-cols-[auto_auto_1fr_auto] items-center gap-2 text-left font-semibold"
-                        onClick={() => toggleExpand(item.data.id)}
+                        onClick={() => togglePlaylistExpanded(item.data.id)}
                         type="button"
                       >
                         {expandedPlaylists[item.data.id] || search ? (

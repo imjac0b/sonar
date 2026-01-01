@@ -38,6 +38,12 @@ interface Settings {
   alwaysShowTitle: boolean; // Always show title overlay on streams
 }
 
+interface ChannelSelectorState {
+  expandedPlaylists: Record<string, boolean>;
+  search: string;
+  scrollOffset: number;
+}
+
 type ModalView =
   | "welcome"
   | "add-m3u"
@@ -59,6 +65,7 @@ interface AppState {
   selectedStreamId: string | null;
   ui: UIState;
   settings: Settings;
+  channelSelector: ChannelSelectorState;
   isAudioEnabled: boolean;
 
   // Actions
@@ -75,11 +82,14 @@ interface AppState {
   setModalView: (view: UIState["modalView"]) => void;
   setPortrait: (isPortrait: boolean) => void;
   toggleSetting: (key: keyof Settings) => void;
+  setChannelSelectorSearch: (search: string) => void;
+  togglePlaylistExpanded: (playlistId: string) => void;
+  setChannelSelectorScrollOffset: (offset: number) => void;
 }
 
 type PersistedState = Pick<
   AppState,
-  "playlists" | "streams" | "selectedStreamId" | "settings"
+  "playlists" | "streams" | "selectedStreamId" | "settings" | "channelSelector"
 >;
 
 const getTauriStore = () => new LazyStore("store.json");
@@ -112,6 +122,11 @@ export const useStore = create<AppState>()(
         focusMode: false,
         proxyImages: false,
         alwaysShowTitle: false,
+      },
+      channelSelector: {
+        expandedPlaylists: {},
+        search: "",
+        scrollOffset: 0,
       },
       ui: {
         isModalOpen: true,
@@ -230,6 +245,28 @@ export const useStore = create<AppState>()(
         set((state) => ({
           settings: { ...state.settings, [key]: !state.settings[key] },
         })),
+
+      setChannelSelectorSearch: (search) =>
+        set((state) => ({
+          channelSelector: { ...state.channelSelector, search },
+        })),
+
+      togglePlaylistExpanded: (playlistId) =>
+        set((state) => ({
+          channelSelector: {
+            ...state.channelSelector,
+            expandedPlaylists: {
+              ...state.channelSelector.expandedPlaylists,
+              [playlistId]:
+                !state.channelSelector.expandedPlaylists[playlistId],
+            },
+          },
+        })),
+
+      setChannelSelectorScrollOffset: (offset) =>
+        set((state) => ({
+          channelSelector: { ...state.channelSelector, scrollOffset: offset },
+        })),
     }),
     {
       name: "sonar-storage",
@@ -241,6 +278,7 @@ export const useStore = create<AppState>()(
         streams: state.streams,
         selectedStreamId: state.selectedStreamId,
         settings: state.settings,
+        channelSelector: state.channelSelector,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && (state.streams.length > 0 || state.playlists.length > 0)) {
