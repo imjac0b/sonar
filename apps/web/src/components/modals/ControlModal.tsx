@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/correctness/noChildrenProp: Tanstack form */
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -18,8 +20,18 @@ import {
   Video,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { MadeBy } from "@/components/made-by";
+import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "@/components/shadcn/field";
+import { Input } from "@/components/shadcn/input";
 import { useTheme } from "@/components/theme-provider";
 import {
   Credenza,
@@ -35,6 +47,21 @@ import { cn, proxyImageUrl } from "@/lib/utils";
 import { type XtreamAccount, XtreamClient } from "@/lib/xtream-client";
 import { type Channel, type Playlist, useStore } from "@/store/useStore";
 import packageJson from "../../../package.json";
+
+// Zod schemas for form validation
+const m3uUrlSchema = z.object({
+  url: z.string().url("Please enter a valid URL"),
+});
+
+const xtreamSchema = z.object({
+  url: z.string().url("Please enter a valid server URL"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const kickSchema = z.object({
+  channelName: z.string().min(1, "Channel name is required"),
+});
 
 type FlatItem =
   | { type: "header"; data: Playlist }
@@ -86,73 +113,6 @@ function flattenItems(
     return flattenItemsWithSearch(playlists, search);
   }
   return flattenItemsDefault(playlists, expandedPlaylists);
-}
-
-// Minimal UI Components
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "default" | "outline" | "ghost";
-  size?: "default" | "sm";
-}) {
-  const baseStyles =
-    "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
-  const variants = {
-    default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-    outline:
-      "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
-    ghost: "hover:bg-accent hover:text-accent-foreground",
-  };
-  const sizes = {
-    default: "h-9 px-4 py-2",
-    sm: "h-8 rounded-md px-3 text-xs",
-  };
-
-  return (
-    <button
-      className={cn(baseStyles, variants[variant], sizes[size], className)}
-      type="button"
-      {...props}
-    />
-  );
-}
-
-function Input({
-  className,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      className={cn(
-        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:font-medium file:text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-function Label({
-  className,
-  htmlFor,
-  children,
-  ...props
-}: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return (
-    <label
-      className={cn(
-        "font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-        className
-      )}
-      htmlFor={htmlFor}
-      {...props}
-    >
-      {children}
-    </label>
-  );
 }
 
 // --- Sub-Components ---
@@ -224,7 +184,6 @@ function AddM3UView({
   onComplete: () => void;
 }) {
   const addPlaylist = useStore((state) => state.addPlaylist);
-  const [url, setUrl] = useState("");
 
   const fileMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -270,16 +229,22 @@ function AddM3UView({
     },
   });
 
+  const form = useForm({
+    defaultValues: {
+      url: "",
+    },
+    validators: {
+      onSubmit: m3uUrlSchema,
+    },
+    onSubmit: ({ value }) => {
+      urlMutation.mutate(value.url);
+    },
+  });
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       fileMutation.mutate(file);
-    }
-  };
-
-  const handleUrlSubmit = () => {
-    if (url) {
-      urlMutation.mutate(url);
     }
   };
 
@@ -298,31 +263,47 @@ function AddM3UView({
 
   return (
     <div className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="m3u-url">Playlist URL</Label>
-        <div className="flex gap-2">
-          <Input
-            id="m3u-url"
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com/playlist.m3u"
-            value={url}
+      <form
+        id="m3u-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <FieldGroup>
+          <form.Field
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Playlist URL</FieldLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      aria-invalid={isInvalid}
+                      autoComplete="off"
+                      disabled={isLoading}
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="https://example.com/playlist.m3u"
+                      value={field.state.value}
+                    />
+                    <Button disabled={isLoading} type="submit">
+                      Add
+                    </Button>
+                  </div>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+            name="url"
           />
-          <Button disabled={isLoading} onClick={handleUrlSubmit}>
-            Add
-          </Button>
-        </div>
-      </div>
+        </FieldGroup>
+      </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or upload file
-          </span>
-        </div>
-      </div>
+      <FieldSeparator>Or upload file</FieldSeparator>
 
       <Input
         accept=".m3u,.m3u8"
@@ -332,7 +313,7 @@ function AddM3UView({
         type="file"
       />
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
       <Button onClick={onBack} variant="ghost">
         Back
       </Button>
@@ -348,11 +329,6 @@ function AddXtreamView({
   onComplete: () => void;
 }) {
   const addPlaylist = useStore((state) => state.addPlaylist);
-  const [config, setConfig] = useState<XtreamAccount>({
-    url: "",
-    username: "",
-    password: "",
-  });
 
   const connectMutation = useMutation({
     mutationFn: async (xtreamConfig: XtreamAccount) => {
@@ -385,9 +361,19 @@ function AddXtreamView({
     },
   });
 
-  const handleSubmit = () => {
-    connectMutation.mutate(config);
-  };
+  const form = useForm({
+    defaultValues: {
+      url: "",
+      username: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: xtreamSchema,
+    },
+    onSubmit: ({ value }) => {
+      connectMutation.mutate(value);
+    },
+  });
 
   const isLoading = connectMutation.isPending;
   const error = connectMutation.error
@@ -396,40 +382,95 @@ function AddXtreamView({
 
   return (
     <div className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="xtream-url">Server URL</Label>
-        <Input
-          id="xtream-url"
-          onChange={(e) => setConfig({ ...config, url: e.target.value })}
-          placeholder="http://server:port"
-          value={config.url}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="xtream-username">Username</Label>
-        <Input
-          id="xtream-username"
-          onChange={(e) => setConfig({ ...config, username: e.target.value })}
-          value={config.username}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="xtream-password">Password</Label>
-        <Input
-          id="xtream-password"
-          onChange={(e) => setConfig({ ...config, password: e.target.value })}
-          type="password"
-          value={config.password}
-        />
-      </div>
+      <form
+        id="xtream-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <FieldGroup>
+          <form.Field
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Server URL</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    autoComplete="off"
+                    disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="http://server:port"
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+            name="url"
+          />
+          <form.Field
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    autoComplete="username"
+                    disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+            name="username"
+          />
+          <form.Field
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    type="password"
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+            name="password"
+          />
+        </FieldGroup>
+      </form>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <div className="flex justify-between">
         <Button onClick={onBack} variant="ghost">
           Back
         </Button>
-        <Button disabled={isLoading} onClick={handleSubmit}>
+        <Button disabled={isLoading} form="xtream-form" type="submit">
           {isLoading ? "Connecting..." : "Connect"}
         </Button>
       </div>
@@ -447,7 +488,6 @@ function AddKickView({
   const addPlaylist = useStore((state) => state.addPlaylist);
   const addChannelToPlaylist = useStore((state) => state.addChannelToPlaylist);
   const playlists = useStore((state) => state.playlists);
-  const [channelName, setChannelName] = useState("");
 
   const addKickMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -490,11 +530,17 @@ function AddKickView({
     },
   });
 
-  const handleSubmit = () => {
-    if (channelName) {
-      addKickMutation.mutate(channelName);
-    }
-  };
+  const form = useForm({
+    defaultValues: {
+      channelName: "",
+    },
+    validators: {
+      onSubmit: kickSchema,
+    },
+    onSubmit: ({ value }) => {
+      addKickMutation.mutate(value.channelName);
+    },
+  });
 
   const isLoading = addKickMutation.isPending;
   const error = addKickMutation.error
@@ -504,22 +550,47 @@ function AddKickView({
 
   return (
     <div className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="kick-channel">Channel Name</Label>
-        <div className="flex gap-2">
-          <Input
-            id="kick-channel"
-            onChange={(e) => setChannelName(e.target.value)}
-            placeholder="e.g. xqc"
-            value={channelName}
+      <form
+        id="kick-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <FieldGroup>
+          <form.Field
+            children={(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Channel Name</FieldLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      aria-invalid={isInvalid}
+                      autoComplete="off"
+                      disabled={isLoading}
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. xqc"
+                      value={field.state.value}
+                    />
+                    <Button disabled={isLoading} type="submit">
+                      Add
+                    </Button>
+                  </div>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+            name="channelName"
           />
-          <Button disabled={isLoading} onClick={handleSubmit}>
-            Add
-          </Button>
-        </div>
-      </div>
+        </FieldGroup>
+      </form>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Button onClick={onBack} variant="ghost">
         Back
