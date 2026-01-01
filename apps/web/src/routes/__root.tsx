@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { UpdateModal } from "@/components/modals/UpdateModal";
 import { Toaster } from "@/components/shadcn/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -49,6 +50,7 @@ function RootComponent() {
       >
         <Outlet />
         <Toaster richColors />
+        <UpdateModal />
       </ThemeProvider>
       <ReactQueryDevtools buttonPosition="bottom-right" />
       <TanStackRouterDevtools position="bottom-left" />
