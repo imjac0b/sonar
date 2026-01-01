@@ -146,6 +146,29 @@ function handleProviderChange(provider: MediaProviderAdapter | null) {
   }
 }
 
+function extractErrorMessage(e: unknown): string {
+  if (e instanceof Error) {
+    return e.message;
+  }
+  if (typeof e === "string") {
+    return e;
+  }
+  if (e && typeof e === "object") {
+    const obj = e as Record<string, unknown>;
+    // Handle vidstack MediaErrorEvent which has detail.message
+    if (obj.detail && typeof obj.detail === "object") {
+      const detail = obj.detail as Record<string, unknown>;
+      if (typeof detail.message === "string") {
+        return detail.message;
+      }
+    }
+    if (typeof obj.message === "string") {
+      return obj.message;
+    }
+  }
+  return "Failed to load stream";
+}
+
 interface StreamPlayerProps {
   stream: Stream;
   isSelected: boolean;
@@ -192,9 +215,7 @@ export function StreamPlayer({
 
   const handleError = (e: unknown) => {
     setPlayerLoading(false);
-    const message =
-      e instanceof Error ? e.message : String(e) || "Failed to load stream";
-    setPlayerError(message);
+    setPlayerError(extractErrorMessage(e));
     console.error("Stream Error:", e);
   };
 
