@@ -1,4 +1,4 @@
-name: Build Tauri
+name: Publish Tauri binaries
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  publish-tauri:
     permissions:
       contents: write
     strategy:
@@ -52,18 +52,20 @@ jobs:
 
       - run: bun install
 
-      - uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: ${{ matrix.args }}
-          includeUpdaterJson: false
           projectPath: './apps/web'
           tagName: ${{ github.ref_name }}
           releaseName: 'Sonar ${{ github.ref_name }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
+          generateReleaseNotes: true
 
       - name: Create cargo cache
         uses: actions/cache/save@v4

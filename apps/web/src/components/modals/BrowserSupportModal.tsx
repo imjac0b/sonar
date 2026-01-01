@@ -48,7 +48,7 @@ export function BrowserSupportModal() {
           </Button>
           <Button asChild className="w-full" variant="outline">
             <a
-              href="https://github.com/imjac0b/sonar"
+              href="https://github.com/imjac0b/sonar/releases/latest"
               rel="noreferrer"
               target="_blank"
             >
