@@ -62,7 +62,26 @@ export class XtreamClient {
   }
 
   async authenticate() {
-    return await this.fetch<unknown>("get_live_categories"); // Simple check
+    const response = await fetch(
+      `${this.baseUrl}/player_api.php?${this.params.toString()}&type=m3u_plus&output=ts`
+    );
+    if (!response.ok) {
+      throw new Error(`Xtream API Error: ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as {
+      user_info?: {
+        allowed_output_formats?: string[];
+      };
+    };
+
+    if (!data.user_info?.allowed_output_formats?.includes("m3u8")) {
+      throw new Error(
+        "This Xtream server does not support m3u8 output format, which is required for playback"
+      );
+    }
+
+    return data;
   }
 
   async getCategories(): Promise<XtreamCategory[]> {
@@ -77,9 +96,9 @@ export class XtreamClient {
     return await this.fetch<XtreamStream[]>("get_live_streams", params);
   }
 
-  getStreamUrl(streamId: number, extension = "ts"): string {
+  getStreamUrl(streamId: number): string {
     const username = this.params.get("username");
     const password = this.params.get("password");
-    return `${this.baseUrl}/live/${username}/${password}/${streamId}.${extension}`;
+    return `${this.baseUrl}/live/${username}/${password}/${streamId}.m3u8`;
   }
 }

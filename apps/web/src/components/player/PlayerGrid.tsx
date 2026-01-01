@@ -34,6 +34,8 @@ export function PlayerGrid() {
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
 
+  console.log(streams);
+
   return (
     <div
       className="grid h-screen w-full gap-1 bg-background"

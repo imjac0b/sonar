@@ -361,10 +361,7 @@ function AddXtreamView({
       const channels: Channel[] = streams.map((s) => ({
         id: s.stream_id.toString(),
         name: s.name,
-        url: client.getStreamUrl(
-          s.stream_id,
-          s.stream_type === "live" ? "ts" : s.container_extension || "ts"
-        ),
+        url: client.getStreamUrl(s.stream_id),
         group: s.category_id,
         logo: s.stream_icon,
       }));
