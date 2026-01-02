@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish-tauri:
+  build-tauri:
     permissions:
       contents: write
     strategy:
@@ -35,15 +35,6 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Restore Cargo cache
-        uses: actions/cache/restore@v4
-        id: cargo-cache-restore
-        with:
-          path: |
-            ~/.cargo/
-            apps/web/src-tauri/target/
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -67,12 +58,14 @@ jobs:
           prerelease: false
           generateReleaseNotes: true
 
-      - name: Create cargo cache
-        uses: actions/cache/save@v4
-        id: cargo-cache-save
-        if: steps.cargo-cache-restore.outputs.cache-hit != 'true'
-        with:
-          path: |
-            ~/.cargo/
-            apps/web/src-tauri/target/
-          key: ${{ steps.cargo-cache-restore.outputs.cache-primary-key }}
+  publish-release:
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit ${{ github.ref_name }} --draft=false
